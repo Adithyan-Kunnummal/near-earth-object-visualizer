@@ -4,6 +4,7 @@ import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js'
 
 import createCamera from '/camera.js'
 import createSphereInstance from '/sphere.js'
+import createSkybox from '/skybox.js'
 
 function main() {
     const canvas = document.querySelector('#c');
@@ -57,13 +58,7 @@ function main() {
     objects.push(moonMesh);
 
     // Skybox
-    const height = 15, radius = 100;
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load("images/stars.jpg");
-    texture.colorSpace = THREE.SRGBColorSpace;
-    const skybox = new GroundedSkybox(texture, height, radius);
-    skybox.position.y = -height;
-    scene.add(skybox);
+    const skyBox = createSkybox(scene);
 
     /* Resize renderer if renderer's canvas
        size is not the same as the display size. */
@@ -93,8 +88,8 @@ function main() {
         objects.forEach((obj) => {
             obj.rotation.y = time/1000;
         })
-        skybox.rotation.y = time/80000;
-        skybox.rotation.x = time/80000;
+        skyBox.rotation.y = time/80000;
+        skyBox.rotation.x = time/80000;
 
         renderer.render(scene, camera);
     }
