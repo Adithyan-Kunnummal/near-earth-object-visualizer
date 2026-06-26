@@ -1,16 +1,20 @@
-import * as THREE from 'three'
+import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
-import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js'
+import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import createCamera from './js/camera.js'
-import createSphereInstance from './js/sphere.js'
-import createSkybox from './js/skybox.js'
+import {createCamera, makeCameraFollow} from './js/camera.js';
+import createSphereInstance from './js/sphere.js';
+import createSkybox from './js/skybox.js';
+import getBodies from './js/bodies.js'
+import data from './js/neo-data-parser.js';
 
-function main() {
+async function main() {
     const canvas = document.querySelector('#c');
     const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
     const camera = createCamera(canvas);
     const scene = new THREE.Scene();
+    const controls = new OrbitControls(camera, canvas);
 
     // Light
     {
@@ -22,43 +26,18 @@ function main() {
     }
 
     // Solar system
-    const objects = [];
-
-    const solarSystem = new THREE.Object3D();
-    scene.add(solarSystem);
-    objects.push(solarSystem);
-
-    // Sun
-    const sunMesh = createSphereInstance("images/sun.jpg");
-    sunMesh.scale.set(3,3,3);
-    solarSystem.add(sunMesh);
-    objects.push(sunMesh);
-
-    // Earth
-    const earthOrbit = new THREE.Object3D();
-    solarSystem.add(earthOrbit);
-    objects.push(earthOrbit);
-
-    const earthMesh = createSphereInstance("images/earth_daymap.jpg");
-    earthMesh.scale.set(2,2,2);
-    earthOrbit.position.x = 10;
-    earthOrbit.add(earthMesh);
-    objects.push(earthMesh);
-
-    
-    // Moon
-    const moonOrbit = new THREE.Object3D();
-    earthOrbit.add(moonOrbit);
-    
-
-    const moonMesh = createSphereInstance("images/moon.jpg");
-    moonMesh.scale.set(1,1,1);
-    moonOrbit.position.x = 5;
-    moonOrbit.add(moonMesh);
-    objects.push(moonMesh);
+    const {solarSystem, sunMesh, earthOrbit, earthMesh, moonOrbit, moonMesh} = getBodies(scene);
 
     // Skybox
     const skyBox = createSkybox(scene);
+
+    // Asteroid
+    const asteroidMesh = await data();
+    asteroidMesh.position.x = 20;
+    asteroidMesh.position.y = 20;
+    asteroidMesh.position.z = 20;
+    earthOrbit.add(asteroidMesh);
+
 
     /* Resize renderer if renderer's canvas
        size is not the same as the display size. */
@@ -85,15 +64,24 @@ function main() {
         }
 
         // rotate objects
-        objects.forEach((obj) => {
-            obj.rotation.y = time/1000;
-        })
+        sunMesh.rotation.y = time/1000;
+        earthMesh.rotation.y = time/1000;
+        earthOrbit.rotation.y = time/10000;
+        moonMesh.rotation.y = time/1000;
+        moonOrbit.rotation.y = time/10000;
         skyBox.rotation.y = time/80000;
-        skyBox.rotation.x = time/80000;
+
+        // animate asteroid
+        asteroidMesh.position.y -= 0.05;
+        asteroidMesh.position.z -= 0.05;
 
         renderer.render(scene, camera);
+
+        // Making camera follow earth
+        makeCameraFollow(camera, earthMesh, controls, canvas);
     }
     renderer.setAnimationLoop(render);
+
 
 }
 
@@ -103,4 +91,3 @@ if ( WebGL.isWebGL2Available() ) {
     const warning = WebGL.getWebGL2ErrorMessage();
     document.getElementById( 'container' ).appendChild( warning );
 }
-
