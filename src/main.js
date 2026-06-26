@@ -2,9 +2,9 @@ import * as THREE from 'three'
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js'
 
-import createCamera from '/camera.js'
-import createSphereInstance from '/sphere.js'
-import createSkybox from '/skybox.js'
+import createCamera from './js/camera.js'
+import createSphereInstance from './js/sphere.js'
+import createSkybox from './js/skybox.js'
 
 function main() {
     const canvas = document.querySelector('#c');
