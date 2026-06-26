@@ -1,22 +1,111 @@
-import * as THREE from 'three';
+import * as THREE from 'three'
+import WebGL from 'three/addons/capabilities/WebGL.js';
+import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js'
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+import createCamera from '/camera.js'
+import createSphereInstance from '/sphere.js'
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
+function main() {
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
+    const camera = createCamera(canvas);
+    const scene = new THREE.Scene();
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+    // Light
+    {
+        const color = 0xffffff;
+        const intensity = 3;
+        const light = new THREE.DirectionalLight(color, intensity);
+        light.position.set(-1, 2, 4);
+        scene.add(light);
+    }
 
-camera.position.z = 5;
+    // Solar system
+    const objects = [];
 
-function animate( time ) {
-    cube.rotation.x = time / 2000;
-    cube.rotation.y = time / 1000;  
-    renderer.render( scene, camera );
+    const solarSystem = new THREE.Object3D();
+    scene.add(solarSystem);
+    objects.push(solarSystem);
+
+    // Sun
+    const sunMesh = createSphereInstance("images/sun.jpg");
+    sunMesh.scale.set(3,3,3);
+    solarSystem.add(sunMesh);
+    objects.push(sunMesh);
+
+    // Earth
+    const earthOrbit = new THREE.Object3D();
+    solarSystem.add(earthOrbit);
+    objects.push(earthOrbit);
+
+    const earthMesh = createSphereInstance("images/earth_daymap.jpg");
+    earthMesh.scale.set(2,2,2);
+    earthOrbit.position.x = 10;
+    earthOrbit.add(earthMesh);
+    objects.push(earthMesh);
+
+    
+    // Moon
+    const moonOrbit = new THREE.Object3D();
+    earthOrbit.add(moonOrbit);
+    
+
+    const moonMesh = createSphereInstance("images/moon.jpg");
+    moonMesh.scale.set(1,1,1);
+    moonOrbit.position.x = 5;
+    moonOrbit.add(moonMesh);
+    objects.push(moonMesh);
+
+    // Skybox
+    const height = 15, radius = 100;
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load("images/stars.jpg");
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const skybox = new GroundedSkybox(texture, height, radius);
+    skybox.position.y = -height;
+    scene.add(skybox);
+
+    /* Resize renderer if renderer's canvas
+       size is not the same as the display size. */
+    function resizeRendererToDisplaySize(renderer) {
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const needResize = canvas.width !== width || canvas.height !== height;
+        if (needResize) {
+            renderer.setSize(width, height, false);
+        }
+        return needResize;
+    }
+
+    function render(time) {
+        // Change camera aspect if renderer was resized.
+        if(resizeRendererToDisplaySize(renderer)) {
+
+            /* Changing aspect of camera to aspect of canvas  
+               display size to prevent stretching of objects. */
+            const canvas = renderer.domElement;
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+        }
+
+        // rotate objects
+        objects.forEach((obj) => {
+            obj.rotation.y = time/1000;
+        })
+        skybox.rotation.y = time/80000;
+        skybox.rotation.x = time/80000;
+
+        renderer.render(scene, camera);
+    }
+    renderer.setAnimationLoop(render);
+
 }
-renderer.setAnimationLoop( animate );
+
+if ( WebGL.isWebGL2Available() ) {
+    main();
+} else {
+    const warning = WebGL.getWebGL2ErrorMessage();
+    document.getElementById( 'container' ).appendChild( warning );
+}
+
