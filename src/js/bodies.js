@@ -4,7 +4,7 @@ import createSphereInstance from './sphere.js'
 export default function getBodies(scene) {
     const objects = [];
 
-    // Solar system node
+    // Solar system
     const solarSystem = new THREE.Object3D();
     scene.add(solarSystem);
     objects.push(solarSystem);

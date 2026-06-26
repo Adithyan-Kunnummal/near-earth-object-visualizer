@@ -13,7 +13,7 @@ export function createCamera(canvas) {
     return camera
 }
 
-export function makeCameraFollow(camera, obj, controls, canvas) {
+export function makeCameraFollowObject(camera, obj, controls, canvas) {
         const worldPos = new THREE.Vector3();
         obj.getWorldPosition(worldPos);
         camera.lookAt(worldPos);

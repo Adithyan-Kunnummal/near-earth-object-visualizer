@@ -3,11 +3,12 @@ import WebGL from 'three/addons/capabilities/WebGL.js';
 import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import {createCamera, makeCameraFollow} from './js/camera.js';
+import {createCamera, makeCameraFollowObject} from './js/camera.js';
 import createSphereInstance from './js/sphere.js';
 import createSkybox from './js/skybox.js';
 import getBodies from './js/bodies.js'
-import data from './js/neo-data-parser.js';
+import Asteroid from './js/asteroid.js'
+import getNEOData from './js/neo-data-parser.js';
 
 async function main() {
     const canvas = document.querySelector('#c');
@@ -32,11 +33,10 @@ async function main() {
     const skyBox = createSkybox(scene);
 
     // Asteroid
-    const asteroidMesh = await data();
-    asteroidMesh.position.x = 20;
-    asteroidMesh.position.y = 20;
-    asteroidMesh.position.z = 20;
-    earthOrbit.add(asteroidMesh);
+    const NEOData = await getNEOData("2015-09-07", "2015-09-08");
+    const asteroid = new Asteroid(NEOData["2015-09-08"][0], earthMesh.clone());
+    earthOrbit.add(asteroid.mesh);
+    let initialAsteroidPos = asteroid.mesh.position.clone();
 
 
     /* Resize renderer if renderer's canvas
@@ -71,14 +71,19 @@ async function main() {
         moonOrbit.rotation.y = time/10000;
         skyBox.rotation.y = time/80000;
 
-        // animate asteroid
-        asteroidMesh.position.y -= 0.05;
-        asteroidMesh.position.z -= 0.05;
+        // reset asteroid if it goes beyond 20 units
+        if(Math.abs(asteroid.mesh.position.x) >= 20 || Math.abs(asteroid.mesh.position.y) >= 20 || Math.abs(asteroid.mesh.position.z) >= 20) {
+            asteroid.resetPosition(earthMesh);
+            initialAsteroidPos = asteroid.mesh.position.clone();
+        }
+        console.log(asteroid.mesh.position.length())
 
+        asteroid.animate()
+            
         renderer.render(scene, camera);
 
         // Making camera follow earth
-        makeCameraFollow(camera, earthMesh, controls, canvas);
+        makeCameraFollowObject(camera, earthMesh, controls, canvas);
     }
     renderer.setAnimationLoop(render);
 
