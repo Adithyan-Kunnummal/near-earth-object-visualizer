@@ -1,15 +1,19 @@
 import * as THREE from 'three'
 import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js'
 
-export default function createSkybox(scene) {
-    const height = 15, radius = 100;
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load("images/stars.jpg");
-    texture.colorSpace = THREE.SRGBColorSpace;
+export default class Skybox {
+    constructor(scene, textureLoader, texturePath = "images/stars.jpg", height = 15, radius = 100) {
+        const texture = textureLoader.load(texturePath);
+        texture.colorSpace = THREE.SRGBColorSpace;
 
-    const skybox = new GroundedSkybox(texture, height, radius);
-    skybox.position.y = -height;
-    scene.add(skybox);
+        this.skybox = new GroundedSkybox(texture, height, radius);
+        this.skybox.position.y = -height;
+        
+        scene.add(this.skybox);
+    }
 
-    return skybox;
+    animate(time, speed = 1) {
+        speed *= 0.001
+        this.skybox.rotation.y = time/80000;
+    }
 }

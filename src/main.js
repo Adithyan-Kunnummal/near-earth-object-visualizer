@@ -1,41 +1,56 @@
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import {createCamera, makeCameraFollowObject} from './js/camera.js';
-import createSphereInstance from './js/sphere.js';
-import createSkybox from './js/skybox.js';
-import getBodies from './js/bodies.js'
+import Camera from  './js/camera.js';
+import Skybox from './js/skybox.js';
+import Body from './js/body.js'
 import Asteroid from './js/asteroid.js'
 import getNEOData from './js/neo-data-parser.js';
 
 async function main() {
     const canvas = document.querySelector('#c');
     const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
-    const camera = createCamera(canvas);
+    const camera = new Camera(canvas);
     const scene = new THREE.Scene();
-    const controls = new OrbitControls(camera, canvas);
+    const textureLoader = new THREE.TextureLoader()
 
     // Light
     {
         const color = 0xffffff;
-        const intensity = 3;
+        const intensity = 2;
         const light = new THREE.DirectionalLight(color, intensity);
         light.position.set(-1, 2, 4);
         scene.add(light);
     }
 
-    // Solar system
-    const {solarSystem, sunMesh, earthOrbit, earthMesh, moonOrbit, moonMesh} = getBodies(scene);
+    const sun = new Body(textureLoader, '/images/sun.jpg', 3);
+    const earth = new Body(textureLoader, '/images/earth_daymap.jpg', 2);
+    const moon = new Body(textureLoader, '/images/moon.jpg', 1);
 
-    // Skybox
-    const skyBox = createSkybox(scene);
+    const solarSystem = new THREE.Object3D();
+    const earthOrbit = new THREE.Object3D();
+    const moonOrbit = new THREE.Object3D();
+
+    // Scenegraph
+    scene.add(solarSystem);
+    solarSystem.add(sun.mesh);
+    solarSystem.add(earthOrbit);
+    earthOrbit.add(earth.mesh);
+    earthOrbit.add(moonOrbit);
+    moonOrbit.add(moon.mesh);
+
+    earth.mesh.position.x = 15;
+    moon.mesh.position.x = 5;
+    moonOrbit.position.x = 15;
+
+    const skybox = new Skybox(scene, textureLoader);
 
     // Asteroid
     const NEOData = await getNEOData("2015-09-07", "2015-09-08");
-    const asteroid = new Asteroid(NEOData["2015-09-08"][0], earthMesh.clone());
-    earthOrbit.add(asteroid.mesh);
+    const asteroid = new Asteroid(textureLoader, "/images/asteroid.jpg", NEOData["2015-09-08"][0], earth);
+
+    earthOrbit.add(asteroid.mesh); // So that asteroid can "near miss" earth.
     let initialAsteroidPos = asteroid.mesh.position.clone();
 
 
@@ -59,31 +74,39 @@ async function main() {
             /* Changing aspect of camera to aspect of canvas  
                display size to prevent stretching of objects. */
             const canvas = renderer.domElement;
-            camera.aspect = canvas.clientWidth / canvas.clientHeight;
-            camera.updateProjectionMatrix();
+            camera.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.camera.updateProjectionMatrix();
         }
 
-        // rotate objects
-        sunMesh.rotation.y = time/1000;
-        earthMesh.rotation.y = time/1000;
-        earthOrbit.rotation.y = time/10000;
-        moonMesh.rotation.y = time/1000;
-        moonOrbit.rotation.y = time/10000;
-        skyBox.rotation.y = time/80000;
+        // Rotations and revolutions
+        sun.animate(time, 0.1)
+        earth.animate(time)
+        moon.animate(time)
 
-        // reset asteroid if it goes beyond 20 units
-        if(Math.abs(asteroid.mesh.position.x) >= 20 || Math.abs(asteroid.mesh.position.y) >= 20 || Math.abs(asteroid.mesh.position.z) >= 20) {
-            asteroid.resetPosition(earthMesh);
+        earthOrbit.rotation.y = time * 0.0001;
+        moonOrbit.rotation.y = time * 0.0001;
+        skybox.animate(time, 0.8);
+
+        // Reset asteroid if it goes beyond 20 units
+        if(Math.abs(asteroid.mesh.position.distanceTo(earth.mesh.position)) >= 80 ) {
+            asteroid.resetPosition(earth);
             initialAsteroidPos = asteroid.mesh.position.clone();
         }
-        console.log(asteroid.mesh.position.length())
 
-        asteroid.animate()
+        asteroid.animate(earth);
+
+        // Asteroid POV
+        // const worldPos = new THREE.Vector3();
+        // asteroid.mesh.getWorldPosition(worldPos);
+        // const earthWorldPos = new THREE.Vector3();
+        // earth.mesh.getWorldPosition(earthWorldPos);
+        // camera.position.copy(worldPos.clone().add(new THREE.Vector3(0,1,0)));
+        // camera.lookAt(earthWorldPos);
             
-        renderer.render(scene, camera);
+        renderer.render(scene, camera.camera);
 
         // Making camera follow earth
-        makeCameraFollowObject(camera, earthMesh, controls, canvas);
+        camera.makeCameraFollowObject(earth.mesh);
     }
     renderer.setAnimationLoop(render);
 
