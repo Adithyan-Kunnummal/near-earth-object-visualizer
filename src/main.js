@@ -37,12 +37,8 @@ async function main() {
     solarSystem.add(sun.mesh);
     solarSystem.add(earthOrbit);
     earthOrbit.add(earth.mesh);
-    earthOrbit.add(moonOrbit);
+    earth.mesh.add(moonOrbit);
     moonOrbit.add(moon.mesh);
-
-    earth.mesh.position.x = 15;
-    moon.mesh.position.x = 5;
-    moonOrbit.position.x = 15;
 
     const skybox = new Skybox(scene, textureLoader);
 
@@ -83,8 +79,10 @@ async function main() {
         earth.animate(time)
         moon.animate(time)
 
-        earthOrbit.rotation.y = time * 0.0001;
-        moonOrbit.rotation.y = time * 0.0001;
+        earth.mesh.position.x = 15 * Math.sin(time * 0.0001);
+        earth.mesh.position.z = 15 * Math.cos(time * 0.0001);
+        moon.mesh.position.x = 5 * Math.sin(time * 0.00001);
+        moon.mesh.position.z = 5 * Math.cos(time * 0.00001);
         skybox.animate(time, 0.8);
 
         // Reset asteroid if it goes beyond 20 units
@@ -100,16 +98,18 @@ async function main() {
         // asteroid.mesh.getWorldPosition(worldPos);
         // const earthWorldPos = new THREE.Vector3();
         // earth.mesh.getWorldPosition(earthWorldPos);
-        // camera.position.copy(worldPos.clone().add(new THREE.Vector3(0,1,0)));
-        // camera.lookAt(earthWorldPos);
+        // camera.camera.position.copy(worldPos.clone().add(new THREE.Vector3(0,0,0)));
+        // camera.camera.lookAt(earthWorldPos);
             
         renderer.render(scene, camera.camera);
 
-        // Making camera follow earth
         camera.makeCameraFollowObject(earth.mesh);
+    if (asteroid.mesh.position.distanceTo(earth.mesh.position) < 3) {
+        console.log("hit")
+    }
+
     }
     renderer.setAnimationLoop(render);
-
 
 }
 

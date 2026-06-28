@@ -13,22 +13,11 @@ export default class Asteroid {
         this.mesh = body.mesh;
         
         this.spawnDistance = 60;
-        this.speed = 1;
-        this.missOffset = new THREE.Vector3(
-            getRandomNumber(6, 8),
-            getRandomNumber(6, 8),
-            getRandomNumber(6, 8)
-        )
+        this.speed = 2;
+        this.missRadius = 10;
 
         this.mesh.scale.set(this.estimated_average_radius, this.estimated_average_radius, this.estimated_average_radius);
-        this.mesh.position.set(
-            getRandomNumber(-this.spawnDistance, this.spawnDistance),
-            getRandomNumber(-this.spawnDistance, this.spawnDistance),
-            getRandomNumber(-this.spawnDistance, this.spawnDistance)
-        ); // Random starting position.
-
-        const direction = new THREE.Vector3().subVectors(earth.mesh.position.clone(), this.mesh.position); // get direction to earth.
-        this.velocity = direction.normalize().multiplyScalar(this.speed);
+        this.resetPosition(earth)
     }
 
     animate(earth) {
@@ -40,12 +29,51 @@ export default class Asteroid {
             getRandomNumber(-this.spawnDistance, this.spawnDistance),
             getRandomNumber(-this.spawnDistance, this.spawnDistance),
             getRandomNumber(-this.spawnDistance, this.spawnDistance));
+        
+            const earthPos = new THREE.Vector3();
+            earth.mesh.getWorldPosition(earthPos);
 
-        const direction = new THREE.Vector3().subVectors(earth.mesh.position.clone(), this.mesh.position); // recompute direction.
-        this.velocity = direction.normalize().multiplyScalar(this.speed);
-    }
+            const direction = new THREE.Vector3()
+                .subVectors(earthPos, this.mesh.position)
+                .normalize();
 
-    
+            let randomVec = new THREE.Vector3(
+                Math.random() * 2 - 1,
+                Math.random() * 2 - 1,
+                Math.random() * 2 - 1
+            ).normalize();
+
+            if (Math.abs(direction.dot(randomVec)) > 0.99) {
+                randomVec.set(1, 0, 0);
+            }
+
+            const perp1 = new THREE.Vector3()
+                .crossVectors(direction, randomVec)
+                .normalize();
+
+            const perp2 = new THREE.Vector3()
+                .crossVectors(direction, perp1)
+                .normalize();
+
+            const angle = Math.random() * Math.PI * 2;
+
+            const missOffset = perp1.multiplyScalar(Math.cos(angle) * this.missRadius)
+                .add(
+                    perp2.multiplyScalar(Math.sin(angle) * this.missRadius)
+                );
+
+            const targetPos = earthPos.clone().add(missOffset);
+
+            this.velocity = new THREE.Vector3()
+                .subVectors(targetPos, this.mesh.position)
+                .normalize()
+                .multiplyScalar(this.speed);
+
+        }
+}
+
+function getRandomFromArr(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function getRandomNumber(min, max) {
