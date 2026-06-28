@@ -5,8 +5,10 @@ export default class Camera {
     constructor(canvas, fov = 75, aspect = window.innerWidth / window.innerHeight, near = 0.1, far = 1000) {
         this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.controls = new OrbitControls(this.camera, canvas);
-        this.camera.position.z = 30;
-        this.camera.position.y = 10;
+        this.camera.position.set(0, 10, 30);
+
+        this.controls.target.set(0, 0, 0);
+        this.controls.update();
     }
 
     makeCameraFollowObject(obj) {

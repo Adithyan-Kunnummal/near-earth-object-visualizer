@@ -13,7 +13,7 @@ export default class Asteroid {
         this.mesh = body.mesh;
         
         this.spawnDistance = 60;
-        this.speed = 2;
+        this.speed = 0.5;
         this.missRadius = 10;
 
         this.mesh.scale.set(this.estimated_average_radius, this.estimated_average_radius, this.estimated_average_radius);

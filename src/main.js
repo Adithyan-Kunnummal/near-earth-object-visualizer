@@ -7,13 +7,25 @@ import Skybox from './js/skybox.js';
 import Body from './js/body.js'
 import Asteroid from './js/asteroid.js'
 import getNEOData from './js/neo-data-parser.js';
+import raycast from './js/raycast.js'
 
 async function main() {
     const canvas = document.querySelector('#c');
     const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
     const camera = new Camera(canvas);
     const scene = new THREE.Scene();
-    const textureLoader = new THREE.TextureLoader()
+    const textureLoader = new THREE.TextureLoader();
+    const mouse = new THREE.Vector2(999,999);
+    const raycaster = new THREE.Raycaster( );
+    const asteroidInfo = document.getElementById('asteroid-info');
+    const boxPosition = new THREE.Vector3();
+
+    function onMouseMove(event) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+    window.addEventListener('mousemove', onMouseMove, false);
+
 
     // Light
     {
@@ -49,7 +61,6 @@ async function main() {
     earthOrbit.add(asteroid.mesh); // So that asteroid can "near miss" earth.
     let initialAsteroidPos = asteroid.mesh.position.clone();
 
-
     /* Resize renderer if renderer's canvas
        size is not the same as the display size. */
     function resizeRendererToDisplaySize(renderer) {
@@ -63,6 +74,8 @@ async function main() {
         return needResize;
     }
 
+
+    // GameLoop
     function render(time) {
         // Change camera aspect if renderer was resized.
         if(resizeRendererToDisplaySize(renderer)) {
@@ -100,13 +113,32 @@ async function main() {
         // earth.mesh.getWorldPosition(earthWorldPos);
         // camera.camera.position.copy(worldPos.clone().add(new THREE.Vector3(0,0,0)));
         // camera.camera.lookAt(earthWorldPos);
-            
-        renderer.render(scene, camera.camera);
 
+        boxPosition.setFromMatrixPosition(asteroid.mesh.matrixWorld);
+        boxPosition.project(camera.camera);
+        const widthHalf = canvas.width/2;
+        const heightHalf = canvas.height/2;
+        boxPosition.x = (boxPosition.x * widthHalf) + widthHalf;
+        boxPosition.y = -(boxPosition.y * heightHalf)+ heightHalf;
+        asteroidInfo.style.top = `${boxPosition.y}px`;
+        asteroidInfo.style.left = `${boxPosition.x}px`;
+
+        if(boxPosition.x < 0 ||
+           boxPosition.x > canvas.clientWidth ||
+           boxPosition.y < 0 ||
+           boxPosition.y > canvas.clientHeight
+        ) {
+            asteroidInfo.style.display = 'none';
+        }
+        else {
+            asteroidInfo.style.display = 'block';
+        }
+        
         camera.makeCameraFollowObject(earth.mesh);
-    if (asteroid.mesh.position.distanceTo(earth.mesh.position) < 3) {
-        console.log("hit")
-    }
+
+        raycast(raycaster, mouse, camera.camera, scene)
+
+        renderer.render(scene, camera.camera);
 
     }
     renderer.setAnimationLoop(render);
@@ -119,3 +151,4 @@ if ( WebGL.isWebGL2Available() ) {
     const warning = WebGL.getWebGL2ErrorMessage();
     document.getElementById( 'container' ).appendChild( warning );
 }
+
