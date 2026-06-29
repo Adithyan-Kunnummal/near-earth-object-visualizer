@@ -12,8 +12,14 @@ export default class Body {
         
     }
 
-    animate(deltaTime, speed = 1) {
+    rotate(deltaTime, speed = 1) {
         speed *= 0.001
         this.mesh.rotation.y = deltaTime * speed
+    }
+
+    revolve(deltaTime, distance, speed = 1) {
+        speed *= 0.0001;
+        this.mesh.position.x = distance * Math.sin(deltaTime * speed);
+        this.mesh.position.z = distance * Math.cos(deltaTime * speed);
     }
 }

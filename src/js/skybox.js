@@ -13,7 +13,7 @@ export default class Skybox {
     }
 
     animate(time, speed = 1) {
-        speed *= 0.001
-        this.skybox.rotation.y = time/80000;
+        speed *= 0.01
+        this.skybox.rotation.y = time/1000 * speed;
     }
 }
