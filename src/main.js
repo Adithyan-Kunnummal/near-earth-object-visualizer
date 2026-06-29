@@ -8,6 +8,7 @@ import Body from './js/body.js'
 import Asteroid from './js/asteroid.js'
 import getNEOData from './js/neo-data-parser.js';
 import raycast from './js/raycast.js'
+import bodies from './js/bodyInfo.js'
 
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
@@ -25,7 +26,7 @@ camera.position.set(0, 10, 30);
 const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
 
 // Mouse pos to pos on screen
-const mouse = new THREE.Vector2();
+const mouse = new THREE.Vector2(999,999);
 function onMouseMove(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -55,6 +56,10 @@ const sun = new Body(textureLoader, '/images/sun.jpg', 3);
 const earth = new Body(textureLoader, '/images/earth_daymap.jpg', 2);
 const moon = new Body(textureLoader, '/images/moon.jpg', 1);
 
+earth.mesh.name = 'earth'
+sun.mesh.name = 'sun'
+moon.mesh.name = 'moon'
+
 const solarSystem = new THREE.Object3D();
 const earthOrbit = new THREE.Object3D();
 const moonOrbit = new THREE.Object3D();
@@ -65,6 +70,10 @@ solarSystem.add(earthOrbit);
 earthOrbit.add(earth.mesh);
 earth.mesh.add(moonOrbit);
 moonOrbit.add(moon.mesh);
+
+const bodyInfoContainer = document.getElementById('body-container');
+const bodyNameDiv = document.getElementById('body-name');
+const bodyInfoDiv = document.getElementById('body-info');
 
 const skybox = new Skybox(scene, textureLoader);
 
@@ -115,9 +124,9 @@ function render(time) {
     asteroid.animate(earth);
 
     // Attatch asteroid info div to asteroid
-    attatchInfoDivToAsteroid(boxPosition, camera);
+    attatchInfoDivToAsteroid();
 
-    // asteroidPOV(asteroid, earth, camera);
+    // asteroidPOV();
     
     // Camera follows earth
     const earthWorldPos = new THREE.Vector3();
@@ -126,14 +135,23 @@ function render(time) {
     controls.update();
 
     // Raycast to get object being hovered on
-    raycast(raycaster, mouse, camera, scene)
+    const objectHoveredOn = raycast(raycaster, mouse, camera, scene);
+    if(objectHoveredOn.name != ''){
+        bodyInfoContainer.style.display = 'block';
+        bodyNameDiv.innerText = bodies[objectHoveredOn.name].name;
+        bodyInfoDiv.innerText = bodies[objectHoveredOn.name].info;
+    } else {
+        bodyInfoContainer.style.display = 'none';
+        bodyNameDiv.innerText = "";
+        bodyInfoDiv.innerText = "";
+    }
 
     renderer.render(scene, camera);
 
 }
 renderer.setAnimationLoop(render);
 
-function asteroidPOV(asteroid, earth, camera) {
+function asteroidPOV() {
     const asteroidWorldPos = new THREE.Vector3();
     asteroid.mesh.getWorldPosition(asteroidWorldPos);
 
@@ -144,7 +162,7 @@ function asteroidPOV(asteroid, earth, camera) {
     camera.lookAt(earthWorldPos);
 }
 
-function attatchInfoDivToAsteroid(boxPosition, camera) {
+function attatchInfoDivToAsteroid() {
     boxPosition.setFromMatrixPosition(asteroid.mesh.matrixWorld);
     boxPosition.project(camera);
 
