@@ -8,7 +8,10 @@ import Body from './js/body.js'
 import Asteroid from './js/asteroid.js'
 import getNEOData from './js/neo-data-parser.js';
 import raycast from './js/raycast.js'
-import bodies from './js/bodyInfo.js'
+import bodiesInfo from './js/bodyInfo.js'
+
+// Physics constants
+
 
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
@@ -37,7 +40,7 @@ window.addEventListener('mousemove', onMouseMove, false);
 const raycaster = new THREE.Raycaster();
 
 // Asteroid info
-const asteroidInfo = document.getElementById('asteroid-info');
+const asteroidInfo = document.getElementById('asteroid-name');
 const boxPosition = new THREE.Vector3();
 
 // Light
@@ -52,30 +55,30 @@ const boxPosition = new THREE.Vector3();
 // Bodies
 const textureLoader = new THREE.TextureLoader();
 
-const sun = new Body(textureLoader, '/images/sun.jpg', 3);
-const earth = new Body(textureLoader, '/images/earth_daymap.jpg', 2);
-const moon = new Body(textureLoader, '/images/moon.jpg', 1);
+const sun = new Body(textureLoader, '/images/sun.jpg', 0 , 1.988e30, 0, 4);
+const mercury = new Body(textureLoader, '/images/mercury.jpg', 5.79e10, 3.301e23,  47.9 * 1000, 1);
+const venus = new Body(textureLoader, '/images/venus.jpg', 1.082e11, 4.867e24, 35 * 1000, 2);
+const earth = new Body(textureLoader, '/images/earth_daymap.jpg', 1.496e11, 5.972e24, 29.78 * 1000, 2);
+const mars = new Body(textureLoader, '/images/mars.jpg', 2.279e11, 6.417e23, 24.1 * 1000, 1.5);
+const jupiter = new Body(textureLoader, '/images/jupiter.jpg', 7.786e11, 1.898e27, 13.1 * 1000, 8);
+const saturn = new Body(textureLoader, '/images/saturn.jpg', 1.433e12, 5.683e26, 9.7 * 1000, 7);
+const uranus = new Body(textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, 5);
+const neptune = new Body(textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, 5);
+
+
+const bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
+bodies.forEach((body) => {
+    scene.add(body.mesh);
+})
 
 earth.mesh.name = 'earth'
 sun.mesh.name = 'sun'
-moon.mesh.name = 'moon'
 
-const solarSystem = new THREE.Object3D();
-const earthOrbit = new THREE.Object3D();
-const moonOrbit = new THREE.Object3D();
+const bodyInfoContainer = document.getElementById('heavenly-body-info-container');
+const bodyNameDiv = document.getElementById('heavenly-body-name');
+const bodyInfoDiv = document.getElementById('heavenly-body-info');
 
-scene.add(solarSystem);
-solarSystem.add(sun.mesh);
-solarSystem.add(earthOrbit);
-earthOrbit.add(earth.mesh);
-earth.mesh.add(moonOrbit);
-moonOrbit.add(moon.mesh);
-
-const bodyInfoContainer = document.getElementById('body-container');
-const bodyNameDiv = document.getElementById('body-name');
-const bodyInfoDiv = document.getElementById('body-info');
-
-const skybox = new Skybox(scene, textureLoader);
+// const skybox = new Skybox(scene, textureLoader);
 
 // Asteroid
 const NEOData = await getNEOData("2015-09-07", "2015-09-08");
@@ -86,8 +89,16 @@ const asteroid = new Asteroid(
     earth
 );
 
-earthOrbit.add(asteroid.mesh); // So that asteroid can "near miss" earth.
+earth.mesh.add(asteroid.mesh); // So that asteroid can "near miss" earth.
 let initialAsteroidPos = asteroid.mesh.position.clone();
+
+// Asteroid form
+const asteroidForm = document.getElementById('asteroid-form');
+function handleAsteroidFormSubmit(e) {
+    e.preventDefault();
+    console.log('lmao');
+}
+asteroidForm.addEventListener('submit', handleAsteroidFormSubmit);
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -99,8 +110,11 @@ function resizeRendererToDisplaySize(renderer) {
     return needResize;
 }
 
+const timer = new THREE.Timer();
+const simSpeed = 365.25 * 24 * 60 * 60/ 60; // 1 yr in 30 sec
+timer.connect( document )
 // Game loop
-function render(time) {
+function render() {
     if(resizeRendererToDisplaySize(renderer)) {
         /* Changing aspect of camera to aspect of canvas  
            display size to prevent stretching of objects. */
@@ -110,10 +124,13 @@ function render(time) {
     }
 
     // Rotations and revolutions
-    sun.rotate(time, 0.1); earth.rotate(time); moon.rotate(time);
-    earth.revolve(time, 15); moon.revolve(time, 5);
+    const dt = timer.getDelta() * simSpeed;
+    bodies.forEach((body) => {
+        body.calcPosition(bodies, dt);
+    })
+    earth.calcPosition(bodies, dt);
     
-    skybox.animate(time, 8);
+    // skybox.animate(dt, 1);
 
     // Reset asteroid if it goes beyond 80 units
     if(Math.abs(asteroid.mesh.position.distanceTo(earth.mesh.position)) >= 80 ) {
@@ -129,24 +146,17 @@ function render(time) {
     // asteroidPOV();
     
     // Camera follows earth
-    const earthWorldPos = new THREE.Vector3();
-    earth.mesh.getWorldPosition(earthWorldPos);
-    controls.target.lerp(earthWorldPos, 0.1);
-    controls.update();
+    // const earthWorldPos = new THREE.Vector3();
+    // earth.mesh.getWorldPosition(earthWorldPos);
+    // controls.target.lerp(earthWorldPos, 0.1);
+    // controls.update();
 
     // Raycast to get object being hovered on
-    const objectHoveredOn = raycast(raycaster, mouse, camera, scene);
-    if(objectHoveredOn.name != ''){
-        bodyInfoContainer.style.display = 'block';
-        bodyNameDiv.innerText = bodies[objectHoveredOn.name].name;
-        bodyInfoDiv.innerText = bodies[objectHoveredOn.name].info;
-    } else {
-        bodyInfoContainer.style.display = 'none';
-        bodyNameDiv.innerText = "";
-        bodyInfoDiv.innerText = "";
-    }
+    let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
+    // displayBodyInfo(objectHoveredOn);
 
     renderer.render(scene, camera);
+    timer.update();
 
 }
 renderer.setAnimationLoop(render);
@@ -183,5 +193,17 @@ function attatchInfoDivToAsteroid() {
         asteroidInfo.style.display = 'none';
     } else {
         asteroidInfo.style.display = 'block';
+    }
+}
+
+function displayBodyInfo(objectHoveredOn) {
+    if(objectHoveredOn.name != ''){
+        bodyInfoContainer.style.display = 'block';
+        bodyNameDiv.innerText = bodiesInfo[objectHoveredOn.name].name;
+        bodyInfoDiv.innerText = bodiesInfo[objectHoveredOn.name].info;
+    } else {
+        bodyInfoContainer.style.display = 'none';
+        bodyNameDiv.innerText = "";
+        bodyInfoDiv.innerText = "";
     }
 }

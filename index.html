@@ -14,14 +14,14 @@
       height: 100%;
       display: block; /* Since default inline element can add whitespace */
     }
-    .asteroid-info {
+    .asteroid-name {
       position: absolute;
       z-index: 100;
       font-weight: bold;
       color: white;
       font-size: 2rem;
     }
-    .body-container {
+    .heavenly-body-info-container {
       display: flex;
       flex-direction: column;
       background-color: rgb(12, 10, 40);
@@ -34,26 +34,38 @@
       z-index: 100;
       display: none;
     }
-    .body-name {
+    .heavenly-body-name {
       position: relative;
       font-weight: bold;
       color: white;
       padding-bottom: 1dvh;
       font-size: 2rem;
     }
-    .body-info {
+    .heavenly-body-info {
       position: relative;
       color: white;
       font-size: 1.2rem;
     }
+    .asteroid-form {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      right: 0;
+
+    }
     </style>
   </head>
   <body>
-    <div id = 'asteroid-info' class = 'asteroid-info'>asteroid</div>
-    <div id = 'body-container' class = 'body-container'>
-      <div id = 'body-name' class = 'body-name'></div>
-      <div id = 'body-info' class='body-info'></div>
+    <div id = 'asteroid-name' class = 'asteroid-name'>ASTEROID</div>
+    <div id = 'heavenly-body-info-container' class = 'heavenly-body-info-container'>
+      <div id = 'heavenly-body-name' class = 'heavenly-body-name'></div>
+      <div id = 'heavenly-body-info' class='heavenly-body-info'></div>
     </div>
+    <form id = 'asteroid-form' class = 'asteroid-form'>
+      <input type="date" id="fname">
+      <input type="date" id="fname">
+      <input type="submit" value="Submit">
+    </form>
     <canvas id="c"></canvas>
     <script type="module" src="/src/main.js"></script>
   </body>
