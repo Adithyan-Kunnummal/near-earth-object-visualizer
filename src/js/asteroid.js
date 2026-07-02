@@ -2,14 +2,14 @@ import * as THREE from 'three'
 import Body from './body.js';
 
 export default class Asteroid {
-    constructor (textureLoader, texturePath, data, earth, radius = 1, widthSegments = 32, heightSegments = 16) {
+    constructor (scene, textureLoader, texturePath, data, earth, radius = 1, widthSegments = 32, heightSegments = 16) {
         this.estimated_radius_min = data["estimated_diameter"]["kilometers"]["estimated_diameter_min"] / 2;
         this.estimated_radius_max = data["estimated_diameter"]["kilometers"]["estimated_diameter_max"] / 2;
         this.estimated_average_radius = (this.estimated_radius_min + this.estimated_radius_max) / 2;
         this.relative_velocity = data["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"];
 
 
-        const body = new Body(textureLoader, texturePath, radius, widthSegments, heightSegments);
+        const body = new Body(scene, textureLoader, texturePath, radius, widthSegments, heightSegments);
         this.mesh = body.mesh;
         
         this.spawnDistance = 60;

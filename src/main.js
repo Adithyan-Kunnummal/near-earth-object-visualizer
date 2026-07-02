@@ -3,7 +3,7 @@ import WebGL from 'three/addons/capabilities/WebGL.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
 
-import Skybox from './js/skybox.js';
+import Stars from './js/stars.js';
 import Body from './js/body.js'
 import Asteroid from './js/asteroid.js'
 import getNEOData from './js/neo-data-parser.js';
@@ -55,21 +55,26 @@ const boxPosition = new THREE.Vector3();
 // Bodies
 const textureLoader = new THREE.TextureLoader();
 
-const sun = new Body(textureLoader, '/images/sun.jpg', 0 , 1.988e30, 0, 4);
-const mercury = new Body(textureLoader, '/images/mercury.jpg', 5.79e10, 3.301e23,  47.9 * 1000, 1);
-const venus = new Body(textureLoader, '/images/venus.jpg', 1.082e11, 4.867e24, 35 * 1000, 2);
-const earth = new Body(textureLoader, '/images/earth_daymap.jpg', 1.496e11, 5.972e24, 29.78 * 1000, 2);
-const mars = new Body(textureLoader, '/images/mars.jpg', 2.279e11, 6.417e23, 24.1 * 1000, 1.5);
-const jupiter = new Body(textureLoader, '/images/jupiter.jpg', 7.786e11, 1.898e27, 13.1 * 1000, 8);
-const saturn = new Body(textureLoader, '/images/saturn.jpg', 1.433e12, 5.683e26, 9.7 * 1000, 7);
-const uranus = new Body(textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, 5);
-const neptune = new Body(textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, 5);
+const sun = new Body(scene, textureLoader, '/images/sun.jpg', 0 , 1.988e30, 0, 4);
+const mercury = new Body(scene, textureLoader, '/images/mercury.jpg', 5.79e10, 3.301e23,  47.9 * 1000, 1);
+const venus = new Body(scene, textureLoader, '/images/venus.jpg', 1.082e11, 4.867e24, 35 * 1000, 2);
+const earth = new Body(scene, textureLoader, '/images/earth_daymap.jpg', 1.496e11, 5.972e24, 29.78 * 1000, 2);
+const mars = new Body(scene, textureLoader, '/images/mars.jpg', 2.279e11, 6.417e23, 24.1 * 1000, 1.5);
+const jupiter = new Body(scene, textureLoader, '/images/jupiter.jpg', 7.786e11, 1.898e27, 13.1 * 1000, 8);
+const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', 1.433e12, 5.683e26, 9.7 * 1000, 7);
+const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, 5);
+const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, 5);
 
 
 const bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 bodies.forEach((body) => {
     scene.add(body.mesh);
 })
+
+// Trails
+for(let i = 1; i <= 4; ++i) {
+    bodies[i].drawTrail(scene, sun)
+}
 
 earth.mesh.name = 'earth'
 sun.mesh.name = 'sun'
@@ -78,11 +83,13 @@ const bodyInfoContainer = document.getElementById('heavenly-body-info-container'
 const bodyNameDiv = document.getElementById('heavenly-body-name');
 const bodyInfoDiv = document.getElementById('heavenly-body-info');
 
-// const skybox = new Skybox(scene, textureLoader);
+// Stars
+const stars = new Stars(scene);
 
 // Asteroid
 const NEOData = await getNEOData("2015-09-07", "2015-09-08");
 const asteroid = new Asteroid(
+    scene,
     textureLoader,
     "/images/asteroid.jpg",
     NEOData["2015-09-08"][0],
@@ -91,14 +98,6 @@ const asteroid = new Asteroid(
 
 earth.mesh.add(asteroid.mesh); // So that asteroid can "near miss" earth.
 let initialAsteroidPos = asteroid.mesh.position.clone();
-
-// Asteroid form
-const asteroidForm = document.getElementById('asteroid-form');
-function handleAsteroidFormSubmit(e) {
-    e.preventDefault();
-    console.log('lmao');
-}
-asteroidForm.addEventListener('submit', handleAsteroidFormSubmit);
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -128,10 +127,8 @@ function render() {
     bodies.forEach((body) => {
         body.calcPosition(bodies, dt);
     })
-    earth.calcPosition(bodies, dt);
+    stars.animate();
     
-    // skybox.animate(dt, 1);
-
     // Reset asteroid if it goes beyond 80 units
     if(Math.abs(asteroid.mesh.position.distanceTo(earth.mesh.position)) >= 80 ) {
         asteroid.resetPosition(earth);
@@ -146,13 +143,13 @@ function render() {
     // asteroidPOV();
     
     // Camera follows earth
-    // const earthWorldPos = new THREE.Vector3();
-    // earth.mesh.getWorldPosition(earthWorldPos);
-    // controls.target.lerp(earthWorldPos, 0.1);
-    // controls.update();
+    const earthWorldPos = new THREE.Vector3();
+    earth.mesh.getWorldPosition(earthWorldPos);
+    controls.target.lerp(earthWorldPos, 0.1);
+    controls.update();
 
     // Raycast to get object being hovered on
-    let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
+    // let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
     // displayBodyInfo(objectHoveredOn);
 
     renderer.render(scene, camera);
