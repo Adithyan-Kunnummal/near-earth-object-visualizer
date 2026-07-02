@@ -8,7 +8,6 @@ export default class Asteroid {
         this.estimated_average_radius = (this.estimated_radius_min + this.estimated_radius_max) / 2;
         this.relative_velocity = data["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"];
 
-
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const texture = textureLoader.load(texturePath);
         texture.colorSpace = THREE.SRGBColorSpace;
@@ -25,6 +24,7 @@ export default class Asteroid {
         this.mesh.scale.set(this.estimated_average_radius, this.estimated_average_radius, this.estimated_average_radius);
         this.resetPosition(earth);
 
+        // Attaching NEO name div to the mesh
         this.boxPosition = new THREE.Vector3();
         this.infoDiv = document.createElement("div");
         this.infoDiv.textContent = data.name;

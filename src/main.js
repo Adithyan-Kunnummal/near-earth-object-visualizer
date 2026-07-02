@@ -20,6 +20,7 @@ const near = 0.1;
 const far = 1000
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 const controls = new OrbitControls(camera, canvas);
+controls.maxDistance = 150;
 camera.position.set(0, 10, 30);
 
 // Renderer
@@ -117,6 +118,7 @@ function resizeRendererToDisplaySize(renderer) {
     return needResize;
 }
 
+// Time
 const timer = new THREE.Timer();
 const simulationSpeed = 365.25 * 24 * 60 * 60/ 60; // 1 yr in 30 sec
 timer.connect(document);
@@ -162,6 +164,7 @@ function render() {
 }
 renderer.setAnimationLoop(render);
 
+// Celestial body info
 function displayBodyInfo(objectHoveredOn) {
     if (!objectHoveredOn || !objectHoveredOn.userData.id) {
         bodyInfoContainer.style.display = 'none';
