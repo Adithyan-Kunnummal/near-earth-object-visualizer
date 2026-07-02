@@ -10,9 +10,6 @@ import getNEOData from './js/neo-data-parser.js';
 import raycast from './js/raycast.js'
 import bodiesInfo from './js/bodyInfo.js'
 
-// Physics constants
-
-
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
 
@@ -41,7 +38,6 @@ const raycaster = new THREE.Raycaster();
 
 // Asteroid info
 const asteroidInfo = document.getElementById('asteroid-name');
-const boxPosition = new THREE.Vector3();
 
 // Light
 {
@@ -65,6 +61,15 @@ const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', 1.433e12, 5.
 const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, 5);
 const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, 5);
 
+sun.mesh.userData.id = 'sun';
+mercury.mesh.userData.id = 'mercury';
+venus.mesh.userData.id = 'venus';
+earth.mesh.userData.id = 'earth';
+mars.mesh.userData.id = 'mars';
+jupiter.mesh.userData.id = 'jupiter';
+saturn.mesh.userData.id = 'saturn';
+uranus.mesh.userData.id = 'uranus';
+neptune.mesh.userData.id = 'neptune';
 
 const bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 bodies.forEach((body) => {
@@ -76,9 +81,6 @@ for(let i = 1; i <= 4; ++i) {
     bodies[i].drawTrail(scene, sun)
 }
 
-earth.mesh.name = 'earth'
-sun.mesh.name = 'sun'
-
 const bodyInfoContainer = document.getElementById('heavenly-body-info-container');
 const bodyNameDiv = document.getElementById('heavenly-body-name');
 const bodyInfoDiv = document.getElementById('heavenly-body-info');
@@ -86,18 +88,24 @@ const bodyInfoDiv = document.getElementById('heavenly-body-info');
 // Stars
 const stars = new Stars(scene);
 
-// Asteroid
-const NEOData = await getNEOData("2015-09-07", "2015-09-08");
-const asteroid = new Asteroid(
-    scene,
-    textureLoader,
-    "/images/asteroid.jpg",
-    NEOData["2015-09-08"][0],
-    earth
-);
+// Today's NEOs
+const date = new Date().toISOString().split('T')[0];
+const NEOData = await getNEOData(date, date);
+const NEOs = [];
+NEOData[date].map((NEO) => {
+    NEOs.push(new Asteroid(
+        scene,
+        textureLoader,
+        "/images/asteroid.jpg",
+        NEO,
+        earth
+    ))
+});
 
-earth.mesh.add(asteroid.mesh); // So that asteroid can "near miss" earth.
-let initialAsteroidPos = asteroid.mesh.position.clone();
+// Adding asteroids to earths mesh so they have similar movement
+// NEOs.forEach((NEO) => {
+//     earth.mesh.add(NEO.mesh);
+// })
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -110,8 +118,9 @@ function resizeRendererToDisplaySize(renderer) {
 }
 
 const timer = new THREE.Timer();
-const simSpeed = 365.25 * 24 * 60 * 60/ 60; // 1 yr in 30 sec
-timer.connect( document )
+const simulationSpeed = 365.25 * 24 * 60 * 60/ 60; // 1 yr in 30 sec
+timer.connect(document);
+
 // Game loop
 function render() {
     if(resizeRendererToDisplaySize(renderer)) {
@@ -123,25 +132,20 @@ function render() {
     }
 
     // Rotations and revolutions
-    const dt = timer.getDelta() * simSpeed;
+    const dt = timer.getDelta() * simulationSpeed;
     bodies.forEach((body) => {
+        if (body.mesh == sun.mesh) return
         body.calcPosition(bodies, dt);
     })
-    stars.animate();
-    
-    // Reset asteroid if it goes beyond 80 units
-    if(Math.abs(asteroid.mesh.position.distanceTo(earth.mesh.position)) >= 80 ) {
-        asteroid.resetPosition(earth);
-        initialAsteroidPos = asteroid.mesh.position.clone();
-    }
 
-    asteroid.animate(earth);
+    // Rotate stars along y axis
+    stars.animate();
 
     // Attatch asteroid info div to asteroid
-    attatchInfoDivToAsteroid();
+    NEOs.forEach((NEO) => {
+        NEO.attatchInfoDiv(canvas, camera)
+    })
 
-    // asteroidPOV();
-    
     // Camera follows earth
     const earthWorldPos = new THREE.Vector3();
     earth.mesh.getWorldPosition(earthWorldPos);
@@ -149,8 +153,8 @@ function render() {
     controls.update();
 
     // Raycast to get object being hovered on
-    // let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
-    // displayBodyInfo(objectHoveredOn);
+    let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
+    displayBodyInfo(objectHoveredOn);
 
     renderer.render(scene, camera);
     timer.update();
@@ -158,49 +162,20 @@ function render() {
 }
 renderer.setAnimationLoop(render);
 
-function asteroidPOV() {
-    const asteroidWorldPos = new THREE.Vector3();
-    asteroid.mesh.getWorldPosition(asteroidWorldPos);
-
-    const earthWorldPos = new THREE.Vector3();
-    earth.mesh.getWorldPosition(earthWorldPos);
-
-    camera.position.copy(asteroidWorldPos.clone().add(new THREE.Vector3(0,1,0)));
-    camera.lookAt(earthWorldPos);
-}
-
-function attatchInfoDivToAsteroid() {
-    boxPosition.setFromMatrixPosition(asteroid.mesh.matrixWorld);
-    boxPosition.project(camera);
-
-    const widthHalf = canvas.width/2;
-    const heightHalf = canvas.height/2;
-
-    boxPosition.x = (boxPosition.x * widthHalf) + widthHalf;
-    boxPosition.y = -(boxPosition.y * heightHalf)+ heightHalf;
-
-    asteroidInfo.style.top = `${boxPosition.y}px`;
-    asteroidInfo.style.left = `${boxPosition.x}px`;
-
-    if(boxPosition.x < 0 ||
-        boxPosition.y < 0 ||
-        boxPosition.x > canvas.clientWidth ||
-        boxPosition.y > canvas.clientHeight
-    ) {
-        asteroidInfo.style.display = 'none';
-    } else {
-        asteroidInfo.style.display = 'block';
-    }
-}
-
 function displayBodyInfo(objectHoveredOn) {
-    if(objectHoveredOn.name != ''){
-        bodyInfoContainer.style.display = 'block';
-        bodyNameDiv.innerText = bodiesInfo[objectHoveredOn.name].name;
-        bodyInfoDiv.innerText = bodiesInfo[objectHoveredOn.name].info;
-    } else {
+    if (!objectHoveredOn || !objectHoveredOn.userData.id) {
         bodyInfoContainer.style.display = 'none';
-        bodyNameDiv.innerText = "";
-        bodyInfoDiv.innerText = "";
+        return;
     }
+
+    const info = bodiesInfo[objectHoveredOn.userData.id];
+
+    if (!info) {
+        bodyInfoContainer.style.display = 'none';
+        return;
+    }
+
+    bodyInfoContainer.style.display = 'block';
+    bodyNameDiv.innerText = info.name;
+    bodyInfoDiv.innerText = info.info;
 }

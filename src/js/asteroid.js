@@ -9,15 +9,30 @@ export default class Asteroid {
         this.relative_velocity = data["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"];
 
 
-        const body = new Body(scene, textureLoader, texturePath, radius, widthSegments, heightSegments);
-        this.mesh = body.mesh;
+        const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+        const texture = textureLoader.load(texturePath);
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        const material = new THREE.MeshBasicMaterial({ map: texture });
+
+        this.mesh = new THREE.Mesh(geometry, material);
+        scene.add(this.mesh);
         
         this.spawnDistance = 60;
         this.speed = 0.5;
         this.missRadius = 10;
 
         this.mesh.scale.set(this.estimated_average_radius, this.estimated_average_radius, this.estimated_average_radius);
-        this.resetPosition(earth)
+        this.resetPosition(earth);
+
+        this.boxPosition = new THREE.Vector3();
+        this.infoDiv = document.createElement("div");
+        this.infoDiv.textContent = data.name;
+
+        this.infoDiv.style.position = "absolute";
+        this.infoDiv.style.color = "white";
+        this.infoDiv.style.zIndex = "1000";
+        document.body.appendChild(this.infoDiv);
     }
 
     animate(earth) {
@@ -69,11 +84,31 @@ export default class Asteroid {
                 .normalize()
                 .multiplyScalar(this.speed);
 
-        }
-}
+    }
 
-function getRandomFromArr(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+    attatchInfoDiv(canvas, camera) {
+    this.boxPosition.setFromMatrixPosition(this.mesh.matrixWorld);
+    this.boxPosition.project(camera);
+
+    const widthHalf = canvas.width/2;
+    const heightHalf = canvas.height/2;
+
+    this.boxPosition.x = (this.boxPosition.x * widthHalf) + widthHalf;
+    this.boxPosition.y = -(this.boxPosition.y * heightHalf)+ heightHalf;
+
+    this.infoDiv.style.top = `${this.boxPosition.y}px`;
+    this.infoDiv.style.left = `${this.boxPosition.x}px`;
+
+    if(this.boxPosition.x < 0 ||
+        this.boxPosition.y < 0 ||
+        this.boxPosition.x > canvas.clientWidth ||
+        this.boxPosition.y > canvas.clientHeight
+    ) {
+        this.infoDiv.style.display = 'none';
+    } else {
+        this.infoDiv.style.display = 'block';
+    }
+}
 }
 
 function getRandomNumber(min, max) {

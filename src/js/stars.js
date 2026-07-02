@@ -6,10 +6,12 @@ export default class Stars {
         this.numStars = 5000;
         this.starsGeometry = new THREE.BufferGeometry();
 
-        this.vertices = new Float32Array(this.numStars * 3); // Each vertex stores x, y, z info
+        // Each vertex stores x, y, z info
+        this.vertices = new Float32Array(this.numStars * 3); 
 
         this.vertices.forEach((_, i) => {
-            this.vertices[i] = (Math.random() - 0.5) * 1000; // Random position between -500, 500
+            // Random position between -500, 500
+            this.vertices[i] = (Math.random() - 0.5) * 1000; 
         })
 
         this.starsGeometry.setAttribute(
