@@ -37,9 +37,6 @@ window.addEventListener('mousemove', onMouseMove, false);
 // Raycaster
 const raycaster = new THREE.Raycaster();
 
-// Asteroid info
-const asteroidInfo = document.getElementById('asteroid-name');
-
 // Light
 {
     const color = 0xffffff;
@@ -104,9 +101,9 @@ NEOData[date].map((NEO) => {
 });
 
 // Adding asteroids to earths mesh so they have similar movement
-// NEOs.forEach((NEO) => {
-//     earth.mesh.add(NEO.mesh);
-// })
+NEOs.forEach((NEO) => {
+    earth.mesh.add(NEO.mesh);
+})
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -120,7 +117,7 @@ function resizeRendererToDisplaySize(renderer) {
 
 // Time
 const timer = new THREE.Timer();
-const simulationSpeed = 365.25 * 24 * 60 * 60/ 60; // 1 yr in 30 sec
+const simulationSpeed = 365.25 * 24 * 60 * 60/ 120; // 1 yr in 30 sec
 timer.connect(document);
 
 // Game loop
@@ -146,6 +143,11 @@ function render() {
     // Attatch asteroid info div to asteroid
     NEOs.forEach((NEO) => {
         NEO.attatchInfoDiv(canvas, camera)
+    })
+
+    // Line from asteroid to earth
+    NEOs.forEach((NEO) => {
+        NEO.updateLineToEarth(earth)
     })
 
     // Camera follows earth
