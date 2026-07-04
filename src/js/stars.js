@@ -11,7 +11,7 @@ export default class Stars {
 
         this.vertices.forEach((_, i) => {
             // Random position between -500, 500
-            this.vertices[i] = (Math.random() - 0.5) * 1000; 
+            this.vertices[i] = (Math.random() - 0.5) * 2000; 
         })
 
         this.starsGeometry.setAttribute(

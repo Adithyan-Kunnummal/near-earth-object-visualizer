@@ -9,6 +9,7 @@ import Asteroid from './js/asteroid.js'
 import getNEOData from './js/neo-data-parser.js';
 import raycast from './js/raycast.js'
 import bodiesInfo from './js/bodyInfo.js'
+import KER from './js/keplerian-elements-and-rates.js'
 
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
@@ -17,10 +18,10 @@ const scene = new THREE.Scene();
 const fov = 75;
 const aspect = window.innerWidth / window.innerHeight;
 const near = 0.1;
-const far = 1000
+const far = 2500
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 const controls = new OrbitControls(camera, canvas);
-controls.maxDistance = 150;
+controls.maxDistance = 1200;
 camera.position.set(0, 10, 30);
 
 // Renderer
@@ -49,15 +50,15 @@ const raycaster = new THREE.Raycaster();
 // Bodies
 const textureLoader = new THREE.TextureLoader();
 
-const sun = new Body(scene, textureLoader, '/images/sun.jpg', 0 , 1.988e30, 0, 4);
-const mercury = new Body(scene, textureLoader, '/images/mercury.jpg', 5.79e10, 3.301e23,  47.9 * 1000, 1);
-const venus = new Body(scene, textureLoader, '/images/venus.jpg', 1.082e11, 4.867e24, 35 * 1000, 2);
-const earth = new Body(scene, textureLoader, '/images/earth_daymap.jpg', 1.496e11, 5.972e24, 29.78 * 1000, 2);
-const mars = new Body(scene, textureLoader, '/images/mars.jpg', 2.279e11, 6.417e23, 24.1 * 1000, 1.5);
-const jupiter = new Body(scene, textureLoader, '/images/jupiter.jpg', 7.786e11, 1.898e27, 13.1 * 1000, 8);
-const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', 1.433e12, 5.683e26, 9.7 * 1000, 7);
-const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, 5);
-const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, 5);
+const sun = new Body(scene, textureLoader, '/images/sun.jpg', 0 , 1.988e30, 0, {}, 4);
+const mercury = new Body(scene, textureLoader, '/images/mercury.jpg', 5.79e10, 3.301e23,  47.9 * 1000, KER["mercury"], 1);
+const venus = new Body(scene, textureLoader, '/images/venus.jpg', 1.082e11, 4.867e24, 35 * 1000, KER["venus"], 2);
+const earth = new Body(scene, textureLoader, '/images/earth_daymap.jpg', 1.496e11, 5.972e24, 29.78 * 1000, KER["earth"], 2);
+const mars = new Body(scene, textureLoader, '/images/mars.jpg', 2.279e11, 6.417e23, 24.1 * 1000, KER["mars"], 1.5);
+const jupiter = new Body(scene, textureLoader, '/images/jupiter.jpg', 7.786e11, 1.898e27, 13.1 * 1000, KER["jupiter"], 8);
+const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', 1.433e12, 5.683e26, 9.7 * 1000, KER["saturn"], 7);
+const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, KER["uranus"], 5);
+const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, KER["neptune"], 5);
 
 sun.mesh.userData.id = 'sun';
 mercury.mesh.userData.id = 'mercury';
@@ -72,13 +73,18 @@ neptune.mesh.userData.id = 'neptune';
 const bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 bodies.forEach((body) => {
     scene.add(body.mesh);
-})
+});
 
-// Trails
-for(let i = 1; i <= 4; ++i) {
-    bodies[i].drawTrail(scene, sun)
-}
+// Drawing sun at the center
+sun.mesh.position.set(0,0,0);
 
+// Drawing orbits for all planets
+bodies.forEach((body) => {
+    if(body.mesh.userData.id == 'sun') return
+    body.drawOrbit(scene);
+});
+
+// Reference to divs holding info about bodies
 const bodyInfoContainer = document.getElementById('heavenly-body-info-container');
 const bodyNameDiv = document.getElementById('heavenly-body-name');
 const bodyInfoDiv = document.getElementById('heavenly-body-info');
@@ -129,13 +135,6 @@ function render() {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
     }
-
-    // Rotations and revolutions
-    const dt = timer.getDelta() * simulationSpeed;
-    bodies.forEach((body) => {
-        if (body.mesh == sun.mesh) return
-        body.calcPosition(bodies, dt);
-    })
 
     // Rotate stars along y axis
     stars.animate();

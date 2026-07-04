@@ -3,10 +3,10 @@ import * as THREE from 'three'
 const G = 6.674e-11;
 const DT = 24 * 60 * 60;
 const AU = 1.496e11;
-const SCALE = 20/AU;
+const SCALE = 50;
 
 export default class Body {
-    constructor(scene, textureLoader, texturePath, distance,  mass, velocity, radius = 1, widthSegments = 32, heightSegments = 16) {
+    constructor(scene, textureLoader, texturePath, distance,  mass, velocity, KER, radius = 1, widthSegments = 32, heightSegments = 16) {
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const texture = textureLoader.load(texturePath);
         texture.colorSpace = THREE.SRGBColorSpace;
@@ -15,7 +15,6 @@ export default class Body {
         this.mesh = new THREE.Mesh(geometry, material);
         this.x = distance;
         this.z = 0
-        this.updatePosition();
 
         this.mass = mass;
 
@@ -23,113 +22,120 @@ export default class Body {
         this.vz = velocity;
 
         this.prevPositions = [];
+
+        // Keplerian Elements and Rates
+        this.KER = KER;
+
+        this.a = 0; // Semi-major axis
+        this.e = 0; // Eccentricity
+        this.I = 0; // Inclination
+        this.L = 0; // Longitude
+        this.varpi = 0; // Longitude of perihelion
+        this.Omega = 0; // Longitude of the ascending node
+
+        this.omega = 0; // Argument of perihelion
+        this.M = 0 // Mean anomaly
+        this.E = 0; // Eccentric anomaly
         
-
+        const [x, y, z] = this.computePosition();
+        this.mesh.position.set(x * SCALE, z * SCALE, y * SCALE);
     }
 
-    calcAttraction(other) {
-        // Calculate distance between bodies
-        const dx = other.x - this.x;
-        const dz = other.z - this.z;
-        const r = Math.sqrt(dx**2 + dz**2);
+    drawOrbit(scene) {
+        const points = [];
 
-        const F = G * this.mass * other.mass / r**2;
+        for(let i = 0; i < 360; ++i) {
+            const E = i * Math.PI/ 180; // to radians
 
-        // Getting x and y components of force
-        const fx = dx / r * F;
-        const fz = dz / r * F;
+            // Compute the planet's heliocentric coordinates
+            const xHeliocentric = this.a * (Math.cos(E) - this.e);
+            const yHeliocentric = this.a * Math.sqrt(1 - this.e**2) * Math.sin(E);
+            const zHeliocentric = 0;
 
-        return [fx, fz];
-    }
+            // Coordinates in 3D space
+            const x = (Math.cos(this.omega) * Math.cos(this.Omega) - Math.sin(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+            (-Math.sin(this.omega) * Math.cos(this.Omega) - Math.cos(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+            const y = (Math.cos(this.omega) * Math.sin(this.Omega) + Math.sin(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+            (-Math.sin(this.omega) * Math.sin(this.Omega) + Math.cos(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+            const z =(Math.sin(this.omega) * Math.sin(this.I)) * xHeliocentric + (Math.cos(this.omega) * Math.sin(this.I)) * yHeliocentric;
 
-    calcPosition(bodies, dt) {
-        let totalFx = 0;
-        let totalFz = 0;
-
-        // Calculate force exterted on this body by all other bodies
-        bodies.forEach((body) => {
-            if(body.mesh == this.mesh) { return; }
-
-            const [fx, fz] = this.calcAttraction(body);
-            totalFx += fx;
-            totalFz += fz;
-            }
-        );
-
-        // Calculate velocity and update mesh position
-        this.vx += totalFx / this.mass * dt;
-        this.vz += totalFz / this.mass * dt;
-
-        this.x += this.vx * dt;
-        this.z += this.vz * dt;
-
-        this.updatePosition()
-    }
-
-    updatePosition() {
-        // Setting distance of body based on scale
-        this.mesh.position.set(this.x * SCALE, 0, this.z * SCALE);
-    }
-
-    drawTrail(scene, sun) {
-        let x = this.x;
-        let z = this.z;
-
-        const initialX = this.x * SCALE;
-        const initialZ = this.z * SCALE;
-
-        let vx = this.vx;
-        let vz = this.vz;
-
-        let totalAngle = 0;
-        let previousAngle = Math.atan2(initialZ, initialX);
-
-        while(totalAngle <= 2 * Math.PI + 1) {
-            let totalFx = 0;
-            let totalFz = 0;
-
-            // Calculate force exterted on this body by sun
-            const dx = sun.x - x;
-            const dz = sun.z - z;
-            const r = Math.sqrt(dx**2 + dz**2);
-
-            const F = G * this.mass * sun.mass / r**2;
-
-            // Getting x and y components of force
-            const fx = dx / r * F;
-            const fz = dz / r * F;
-
-            totalFx += fx;
-            totalFz += fz;
-            
-
-            // Calculate velocity and update mesh position
-            const orbitDetail = 1;
-            const dt = DT * orbitDetail;
-            vx += totalFx / this.mass * dt;
-            vz += totalFz / this.mass * dt;
-
-            x += vx * dt;
-            z += vz * dt;
-
-            this.prevPositions.push(new THREE.Vector3(x * SCALE, 0, z * SCALE));
-
-            // Angle calculation
-            const angle = Math.atan2(z, x);
-            let delta = angle - previousAngle;
-
-            if(delta > Math.PI) { delta -= 2*Math.PI };
-            if(delta < -Math.PI) { delta += 2*Math.PI };
-
-            totalAngle += delta;
-            previousAngle = angle;
+            points.push(new THREE.Vector3(x * SCALE,z * SCALE ,y * SCALE));
         }
 
-        const orbitTrailGeometry = new THREE.BufferGeometry().setFromPoints(this.prevPositions);
-        const orbitTrailMaterial = new THREE.LineBasicMaterial({ color: 0x808080 });
-        const orbitTrail = new THREE.Line(orbitTrailGeometry, orbitTrailMaterial);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({color: 0x808080});
+        const orbit = new THREE.LineLoop(geometry, material);
 
-        scene.add(orbitTrail);
-
+        scene.add(orbit);
     }
+
+    computePosition() {
+        if(this.mesh.userData.id == "sun") return
+
+        // Compute the value of each of that planet's six elements
+        const Teph = getJulianDate();
+        const T = (Teph - 2451545.0)/ 36525;
+
+        this.a = this.KER["a0"] + this.KER["aRate"] * T;
+        this.e = this.KER["e0"] + this.KER["eRate"] * T;
+        this.I = this.KER["I0"] + this.KER["IRate"] * T;
+        this.L = this.KER["L0"] + this.KER["LRate"] * T;
+        this.varpi = this.KER["varpi0"] + this.KER["varpiRate"] * T;
+        this.Omega = this.KER["Omega0"] + this.KER["OmegaRate"] * T;
+
+        // Convert to radians
+        const DEG2RAD = Math.PI / 180;
+        this.I *= DEG2RAD;
+        this.L *= DEG2RAD;
+        this.varpi *= DEG2RAD;
+        this.Omega *= DEG2RAD;
+
+        // Compute the argument of perihelion, and the mean anomaly
+        this.omega = this.varpi - this.Omega;
+        this.M = this.L - this.varpi;
+
+        // Calculating Eccentric anomaly
+        // M = E - e * sin(E)
+        this.M = (this.M % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI); // normalization so M stays within 0 to 2pi
+
+        this.E = this.M + this.e * Math.sin(this.M); // initial guess
+        let n = 0;
+
+        const tot = 1e-6;
+        let deltaE;
+        do {
+            const deltaM = this.M - (this.E - this.e * Math.sin(this.E));
+            deltaE = deltaM / (1 - this.e * Math.cos(this.E));
+            this.E += deltaE;
+        }
+        while(Math.abs(deltaE) > tot)
+
+        // Compute the planet's heliocentric coordinates
+        const xHeliocentric = this.a * (Math.cos(this.E) - this.e);
+        const yHeliocentric = this.a * Math.sqrt(1 - this.e**2) * Math.sin(this.E);
+        const zHeliocentric = 0;
+
+        // Coordinates in 3D space
+        const x = (Math.cos(this.omega) * Math.cos(this.Omega) - Math.sin(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+        (-Math.sin(this.omega) * Math.cos(this.Omega) - Math.cos(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+        const y = (Math.cos(this.omega) * Math.sin(this.Omega) + Math.sin(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+        (-Math.sin(this.omega) * Math.sin(this.Omega) + Math.cos(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+        const z =(Math.sin(this.omega) * Math.sin(this.I)) * xHeliocentric + (Math.cos(this.omega) * Math.sin(this.I)) * yHeliocentric;
+
+        return [x, y, z];
+    }
+}
+
+function getJulianDate(date = new Date()) {
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
+
+    const K = date.getUTCFullYear();
+    const M = date.getUTCMonth() + 1;
+    const I = date.getUTCDate();
+
+    const UT =  hours + (minutes + seconds / 60) / 60;
+
+    return 367 * K - Math.trunc((7 * (K + Math.trunc((M + 9)/ 12)))/ 4) + Math.trunc((275 * M)/ 9) + I + 1721013.5 + UT/ 24;
 }
