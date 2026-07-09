@@ -159,10 +159,10 @@ function render() {
     });
 
     // Camera follows earth
-    const earthWorldPos = new THREE.Vector3();
-    earth.mesh.getWorldPosition(earthWorldPos);
-    controls.target.lerp(earthWorldPos, 0.1);
-    controls.update();
+    // const earthWorldPos = new THREE.Vector3();
+    // earth.mesh.getWorldPosition(earthWorldPos);
+    // controls.target.lerp(earthWorldPos, 0.1);
+    // controls.update();
 
     // Raycast to get object being hovered on
     let objectHoveredOn = raycast(raycaster, mouse, camera, scene);

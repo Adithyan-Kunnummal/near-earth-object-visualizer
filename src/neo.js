@@ -40,7 +40,7 @@ export default class NEO{
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.scale.set(0.5, 0.5, 0.5);
         const [x, y, z] = this.computePosition();
-        this.mesh.position.set(x * SCALE, z * SCALE, y * SCALE);
+        this.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
         scene.add(this.mesh);
 
         // Attaching NEO name div to the mesh
@@ -72,7 +72,7 @@ export default class NEO{
             (-Math.sin(this.omega) * Math.sin(this.Omega) + Math.cos(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * yHeliocentric;
             const z =(Math.sin(this.omega) * Math.sin(this.I)) * xHeliocentric + (Math.cos(this.omega) * Math.sin(this.I)) * yHeliocentric;
 
-            points.push(new THREE.Vector3(x * SCALE,z * SCALE ,y * SCALE));
+            points.push(new THREE.Vector3(-x * SCALE,z * SCALE ,y * SCALE));
         }
 
         const geometry = new THREE.BufferGeometry().setFromPoints(points);

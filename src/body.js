@@ -30,7 +30,7 @@ export default class Body {
         this.E = 0; // Eccentric anomaly
         
         const [x, y, z] = this.computePosition();
-        this.mesh.position.set(x * SCALE, z * SCALE, y * SCALE);
+        this.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
     }
 
     drawOrbit(scene) {
@@ -51,7 +51,7 @@ export default class Body {
             (-Math.sin(this.omega) * Math.sin(this.Omega) + Math.cos(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * yHeliocentric;
             const z =(Math.sin(this.omega) * Math.sin(this.I)) * xHeliocentric + (Math.cos(this.omega) * Math.sin(this.I)) * yHeliocentric;
 
-            points.push(new THREE.Vector3(x * SCALE,z * SCALE ,y * SCALE));
+            points.push(new THREE.Vector3(-x * SCALE,z * SCALE ,y * SCALE));
         }
 
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
