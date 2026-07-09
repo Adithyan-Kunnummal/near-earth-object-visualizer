@@ -1,5 +1,6 @@
-import createAsteroid from './asteroid.js';
+import createAsteroid from './neo';
 
+// Get NEO close approaches based on date
 export async function getNEOList(startDate, endDate) {
     try {
         const response = await fetch(
@@ -15,6 +16,7 @@ export async function getNEOList(startDate, endDate) {
     }
 }
 
+// Get data about NEO based on ID from the small body lookup database
 export async function getNEOData(id) {
     try {
         const response = await fetch(

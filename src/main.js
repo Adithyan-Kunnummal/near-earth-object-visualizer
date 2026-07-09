@@ -3,13 +3,13 @@ import WebGL from 'three/addons/capabilities/WebGL.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
 
-import Stars from './js/stars.js';
-import Body from './js/body.js'
-import Asteroid from './js/asteroid.js'
-import {getNEOList, getNEOData} from './js/neo-data-parser.js';
-import raycast from './js/raycast.js'
-import bodiesInfo from './js/bodyInfo.js'
-import KER from './js/keplerian-elements-and-rates.js'
+import Stars from './stars';
+import Body from './body'
+import NEO from './neo.js'
+import raycast from './raycast'
+import bodiesInfo from './bodyInfo'
+import KER from './keplerian-elements-and-rates'
+import {getNEOList, getNEOData} from './neo-data-parser';
 
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
@@ -32,7 +32,7 @@ const mouse = new THREE.Vector2(999,999);
 function onMouseMove(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-}
+};
 window.addEventListener('mousemove', onMouseMove, false);
 
 // Raycaster
@@ -60,6 +60,7 @@ const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', KER["saturn"
 const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', KER["uranus"], 5);
 const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', KER["neptune"], 5);
 
+// Naming bodies to identify the body being pointed at with mouse
 sun.mesh.userData.id = 'sun';
 mercury.mesh.userData.id = 'mercury';
 venus.mesh.userData.id = 'venus';
@@ -98,8 +99,9 @@ const date = new Date().toISOString().split('T')[0];
 const NEOList = await getNEOList(date, date);
 const NEOs = [];
 
-NEOList[date].forEach(async (NEO) => {
-    const data = await getNEOData(NEO.id);
+// Create and render todays NEO objects
+NEOList[date].forEach(async (NEOData) => {
+    const data = await getNEOData(NEOData.id);
     const orbitalData = data.orbital_data;
 
     const NEOKER = {
@@ -111,24 +113,21 @@ NEOList[date].forEach(async (NEO) => {
         Omega: orbitalData.ascending_node_longitude,
         M0: orbitalData.mean_anomaly,
         tEpoch: orbitalData.epoch_osculation,
-    }
+    };
 
-    const NEOBody = new Asteroid(
+    const NEOBody = new NEO(
         scene,
         textureLoader,
         "/images/asteroid.jpg",
-        NEO,
+        NEOData,
         earth,
         NEOKER
     );
 
+    // Draw NEO's orbit
     NEOBody.drawOrbit(scene);
-    NEOs.push(NEOBody);
-});
 
-// Drawing orbits for all NEOs
-NEOs.forEach((NEO) => {
-    
+    NEOs.push(NEOBody);
 });
 
 /* Resize renderer if renderer's canvas
@@ -140,11 +139,6 @@ function resizeRendererToDisplaySize(renderer) {
     if (needResize) { renderer.setSize(width, height, false); }
     return needResize;
 }
-
-// Time
-const timer = new THREE.Timer();
-const simulationSpeed = 365.25 * 24 * 60 * 60/ 120; // 1 yr in 120 sec
-timer.connect(document);
 
 // Game loop
 function render() {
@@ -159,15 +153,10 @@ function render() {
     // Rotate stars along y axis
     stars.animate();
 
-    // Attatch asteroid info div to asteroid
+    // Attatch NEO info div to NEO
     NEOs.forEach((NEO) => {
         NEO.updateInfoDiv(canvas, camera)
-    })
-
-    // Line from asteroid to earth
-    NEOs.forEach((NEO) => {
-        NEO.updateLineToEarth(earth)
-    })
+    });
 
     // Camera follows earth
     const earthWorldPos = new THREE.Vector3();
@@ -180,8 +169,6 @@ function render() {
     displayBodyInfo(objectHoveredOn);
 
     renderer.render(scene, camera);
-    timer.update();
-
 }
 renderer.setAnimationLoop(render);
 

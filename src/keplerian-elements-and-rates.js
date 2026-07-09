@@ -1,4 +1,4 @@
-// Keplerian Elements and rates for planets
+// Keplerian Elements and rates for planets for current epoch
 export default {
     mercury: {
         a0: 0.38709927,

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import Body from './body.js';
+import Body from './body';
+import getJulianDate from './utils/date-utils'
 
 const SCALE = 50;
 const G = 6.674e-11;
@@ -7,19 +8,19 @@ const M = 5.972e24;
 const DEG2RAD = Math.PI / 180;
 
 
-export default class Asteroid{
+export default class NEO{
     constructor (scene, textureLoader, texturePath, data, earth, KER, radius = 1, widthSegments = 32, heightSegments = 16) {
         this.data = data;
 
         // Keplerian elements
-        this.a = KER.a;
-        this.e = KER.e
-        this.I = KER.I;
+        this.a = KER.a; // Semi-major axis
+        this.e = KER.e // Eccentricity
+        this.I = KER.I; // Inclination
         this.n = KER.n // Mean motion
-        this.omega = KER.omega;
-        this.Omega = KER.Omega;
-        this.M0 = KER.M0;
-        this.tEpoch = KER.tEpoch;
+        this.omega = KER.omega; // Argument of perihelion
+        this.Omega = KER.Omega; // Longitude of the ascending node
+        this.M0 = KER.M0; // Mean anomaly for current epoch
+        this.tEpoch = KER.tEpoch; // Current epoch
 
         // Convert to radians
         this.M0 *= DEG2RAD;
@@ -27,8 +28,8 @@ export default class Asteroid{
         this.omega *= DEG2RAD;
         this.Omega *= DEG2RAD;
 
-        this.M = 0;
-        this.E = 0;
+        this.M = 0; // Mean anomaly to be calculated
+        this.E = 0; // Eccentric anomaly to be calculated
         
         // Render NEO
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
@@ -41,24 +42,6 @@ export default class Asteroid{
         const [x, y, z] = this.computePosition();
         this.mesh.position.set(x * SCALE, z * SCALE, y * SCALE);
         scene.add(this.mesh);
-
-        // Draw line to earth
-        this.NEOWorldPos = new THREE.Vector3();
-        this.earthWorldPos = new THREE.Vector3();
-
-        this.mesh.getWorldPosition(this.NEOWorldPos);
-        earth.mesh.getWorldPosition(this.earthWorldPos);
-
-        const NEOEarthLinegeometry = new THREE.BufferGeometry().setFromPoints([this.NEOWorldPos, this.earthWorldPos]);
-        const NEOEarthLinematerial = new THREE.LineDashedMaterial( {
-                color: 0x505050,
-                scale: 1,
-                dashSize: 2,
-                gapSize: 1,
-            } );
-        this.NEOEarthLine = new THREE.Line(NEOEarthLinegeometry, NEOEarthLinematerial);
-        this.NEOEarthLine.computeLineDistances();
-        // scene.add(this.NEOEarthLine);
 
         // Attaching NEO name div to the mesh
         this.boxPosition = new THREE.Vector3();
@@ -164,30 +147,4 @@ export default class Asteroid{
             this.infoDiv.style.display = 'block';
         }
     }
-
-    updateLineToEarth(earth) {
-        this.mesh.getWorldPosition(this.NEOWorldPos);
-        earth.mesh.getWorldPosition(this.earthWorldPos);
-
-        this.NEOEarthLine.geometry.setFromPoints([this.NEOWorldPos, this.earthWorldPos]);
-    }
-}
-
-function getRandomNumber(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
-function getJulianDate(date = new Date()) {
-    // Get universal time and date
-    const hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
-    const seconds = date.getUTCSeconds();
-
-    const K = date.getUTCFullYear();
-    const M = date.getUTCMonth() + 1;
-    const I = date.getUTCDate();
-
-    const UT =  hours + (minutes + seconds / 60) / 60;
-
-    return 367 * K - Math.trunc((7 * (K + Math.trunc((M + 9)/ 12)))/ 4) + Math.trunc((275 * M)/ 9) + I + 1721013.5 + UT/ 24;
 }
