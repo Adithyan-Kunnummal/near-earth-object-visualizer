@@ -97,17 +97,39 @@ const stars = new Stars(scene);
 const date = new Date().toISOString().split('T')[0];
 const NEOList = await getNEOList(date, date);
 const NEOs = [];
-NEOList[date].map((NEO) => {
-    NEOs.push(new Asteroid(
+
+NEOList[date].forEach(async (NEO) => {
+    const data = await getNEOData(NEO.id);
+    const orbitalData = data.orbital_data;
+
+    const NEOKER = {
+        a: orbitalData.semi_major_axis,
+        e: orbitalData.eccentricity,
+        I: orbitalData.inclination,
+        n: orbitalData.mean_motion,
+        omega: orbitalData.perihelion_argument,
+        Omega: orbitalData.ascending_node_longitude,
+        M0: orbitalData.mean_anomaly,
+        tEpoch: orbitalData.epoch_osculation,
+    }
+
+    const NEOBody = new Asteroid(
         scene,
         textureLoader,
         "/images/asteroid.jpg",
         NEO,
-        earth
-    ))
+        earth,
+        NEOKER
+    );
+
+    NEOBody.drawOrbit(scene);
+    NEOs.push(NEOBody);
 });
 
-await getNEOData(3388486).then((data) => console.log(data["orbital_data"]));
+// Drawing orbits for all NEOs
+NEOs.forEach((NEO) => {
+    
+});
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -139,7 +161,7 @@ function render() {
 
     // Attatch asteroid info div to asteroid
     NEOs.forEach((NEO) => {
-        NEO.attatchInfoDiv(canvas, camera)
+        NEO.updateInfoDiv(canvas, camera)
     })
 
     // Line from asteroid to earth

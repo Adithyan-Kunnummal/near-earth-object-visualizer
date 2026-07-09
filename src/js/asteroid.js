@@ -1,33 +1,46 @@
 import * as THREE from 'three'
 import Body from './body.js';
 
-export default class Asteroid {
-    constructor (scene, textureLoader, texturePath, data, earth, radius = 1, widthSegments = 32, heightSegments = 16) {
-        this.estimated_radius_min = data["estimated_diameter"]["kilometers"]["estimated_diameter_min"] / 2;
-        this.estimated_radius_max = data["estimated_diameter"]["kilometers"]["estimated_diameter_max"] / 2;
-        this.estimated_average_radius = (this.estimated_radius_min + this.estimated_radius_max) / 2;
-        this.relative_velocity = data["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"];
-        this.missDistance = data["close_approach_data"][0]["miss_distance"]["astronomical"];
+const SCALE = 50;
+const G = 6.674e-11;
+const M = 5.972e24;
+const DEG2RAD = Math.PI / 180;
+
+
+export default class Asteroid{
+    constructor (scene, textureLoader, texturePath, data, earth, KER, radius = 1, widthSegments = 32, heightSegments = 16) {
         this.data = data;
 
+        // Keplerian elements
+        this.a = KER.a;
+        this.e = KER.e
+        this.I = KER.I;
+        this.n = KER.n // Mean motion
+        this.omega = KER.omega;
+        this.Omega = KER.Omega;
+        this.M0 = KER.M0;
+        this.tEpoch = KER.tEpoch;
+
+        // Convert to radians
+        this.M0 *= DEG2RAD;
+        this.I *= DEG2RAD;
+        this.omega *= DEG2RAD;
+        this.Omega *= DEG2RAD;
+
+        this.M = 0;
+        this.E = 0;
+        
         // Render NEO
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const texture = textureLoader.load(texturePath);
         texture.colorSpace = THREE.SRGBColorSpace;
         const material = new THREE.MeshBasicMaterial({ map: texture });
-        this.mesh = new THREE.Mesh(geometry, material);
-        scene.add(this.mesh);
-        
-        this.spawnDistance = 60;
 
-        this.mesh.position.set(
-            getRandomNumber(-this.spawnDistance, this.spawnDistance),
-            getRandomNumber(-this.spawnDistance, this.spawnDistance),
-            getRandomNumber(-this.spawnDistance, this.spawnDistance));
-        this.mesh.scale.set(
-            this.estimated_average_radius,
-            this.estimated_average_radius,
-            this.estimated_average_radius);
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.scale.set(0.5, 0.5, 0.5);
+        const [x, y, z] = this.computePosition();
+        this.mesh.position.set(x * SCALE, z * SCALE, y * SCALE);
+        scene.add(this.mesh);
 
         // Draw line to earth
         this.NEOWorldPos = new THREE.Vector3();
@@ -45,7 +58,7 @@ export default class Asteroid {
             } );
         this.NEOEarthLine = new THREE.Line(NEOEarthLinegeometry, NEOEarthLinematerial);
         this.NEOEarthLine.computeLineDistances();
-        scene.add(this.NEOEarthLine);
+        // scene.add(this.NEOEarthLine);
 
         // Attaching NEO name div to the mesh
         this.boxPosition = new THREE.Vector3();
@@ -58,7 +71,77 @@ export default class Asteroid {
         document.body.appendChild(this.infoDiv);
     }
 
-    attatchInfoDiv(canvas, camera) {
+    drawOrbit(scene) {
+        const points = [];
+
+        for(let i = 0; i < 360; ++i) {
+            const E = i * Math.PI/ 180; // to radians
+
+            // Compute the planet's heliocentric coordinates
+            const xHeliocentric = this.a * (Math.cos(E) - this.e);
+            const yHeliocentric = this.a * Math.sqrt(1 - this.e**2) * Math.sin(E);
+            const zHeliocentric = 0;
+
+            // Coordinates in 3D space
+            const x = (Math.cos(this.omega) * Math.cos(this.Omega) - Math.sin(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+            (-Math.sin(this.omega) * Math.cos(this.Omega) - Math.cos(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+            const y = (Math.cos(this.omega) * Math.sin(this.Omega) + Math.sin(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+            (-Math.sin(this.omega) * Math.sin(this.Omega) + Math.cos(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+            const z =(Math.sin(this.omega) * Math.sin(this.I)) * xHeliocentric + (Math.cos(this.omega) * Math.sin(this.I)) * yHeliocentric;
+
+            points.push(new THREE.Vector3(x * SCALE,z * SCALE ,y * SCALE));
+        }
+
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineDashedMaterial( {
+                color: 0x505050,
+                scale: 1,
+                dashSize: 2,
+                gapSize: 1,
+            } );
+        const orbit = new THREE.LineLoop(geometry, material);
+        orbit.computeLineDistances();
+
+
+        scene.add(orbit);
+    }
+
+    computePosition() {
+        let M = this.M0 + this.n * DEG2RAD * (getJulianDate() - this.tEpoch);
+
+        // M between 0 to 2pi rad
+        M %= 2 * Math.PI;
+        if (M < 0) M += 2 * Math.PI;
+
+        this.M = M
+
+        this.E = this.M + this.e * Math.sin(this.M); // initial guess
+
+        const tot = 1e-6;
+        let deltaE;
+        do {
+            const deltaM = this.M - (this.E - this.e * Math.sin(this.E));
+            deltaE = deltaM / (1 - this.e * Math.cos(this.E));
+            this.E += deltaE;
+        }
+        while(Math.abs(deltaE) > tot)
+
+        // Compute the planet's heliocentric coordinates
+        const xHeliocentric = this.a * (Math.cos(this.E) - this.e);
+        const yHeliocentric = this.a * Math.sqrt(1 - this.e**2) * Math.sin(this.E);
+        const zHeliocentric = 0;
+
+        // Coordinates in 3D space
+        const x = (Math.cos(this.omega) * Math.cos(this.Omega) - Math.sin(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+        (-Math.sin(this.omega) * Math.cos(this.Omega) - Math.cos(this.omega) * Math.sin(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+        const y = (Math.cos(this.omega) * Math.sin(this.Omega) + Math.sin(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * xHeliocentric + 
+        (-Math.sin(this.omega) * Math.sin(this.Omega) + Math.cos(this.omega) * Math.cos(this.Omega) * Math.cos(this.I)) * yHeliocentric;
+        const z =(Math.sin(this.omega) * Math.sin(this.I)) * xHeliocentric + (Math.cos(this.omega) * Math.sin(this.I)) * yHeliocentric;
+
+        return [x, y, z];
+    }
+
+    updateInfoDiv(canvas, camera) {
         this.boxPosition.setFromMatrixPosition(this.mesh.matrixWorld);
         this.boxPosition.project(camera);
 
@@ -92,4 +175,19 @@ export default class Asteroid {
 
 function getRandomNumber(min, max) {
     return Math.random() * (max - min) + min;
+}
+
+function getJulianDate(date = new Date()) {
+    // Get universal time and date
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
+
+    const K = date.getUTCFullYear();
+    const M = date.getUTCMonth() + 1;
+    const I = date.getUTCDate();
+
+    const UT =  hours + (minutes + seconds / 60) / 60;
+
+    return 367 * K - Math.trunc((7 * (K + Math.trunc((M + 9)/ 12)))/ 4) + Math.trunc((275 * M)/ 9) + I + 1721013.5 + UT/ 24;
 }

@@ -67,12 +67,12 @@ export default class Body {
         const Teph = getJulianDate();
         const T = (Teph - 2451545.0)/ 36525;
 
-        this.a = this.KER["a0"] + this.KER["aRate"] * T;
-        this.e = this.KER["e0"] + this.KER["eRate"] * T;
-        this.I = this.KER["I0"] + this.KER["IRate"] * T;
-        this.L = this.KER["L0"] + this.KER["LRate"] * T;
-        this.varpi = this.KER["varpi0"] + this.KER["varpiRate"] * T;
-        this.Omega = this.KER["Omega0"] + this.KER["OmegaRate"] * T;
+        this.a = this.KER.a0 + this.KER.aRate * T;
+        this.e = this.KER.e0 + this.KER.eRate * T;
+        this.I = this.KER.I0 + this.KER.IRate * T;
+        this.L = this.KER.L0 + this.KER.LRate * T;
+        this.varpi = this.KER.varpi0 + this.KER.varpiRate * T;
+        this.Omega = this.KER.Omega0 + this.KER.OmegaRate * T;
 
         // Convert to radians
         const DEG2RAD = Math.PI / 180;
@@ -90,7 +90,6 @@ export default class Body {
         this.M = (this.M % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI); // normalization so M stays within 0 to 2pi
 
         this.E = this.M + this.e * Math.sin(this.M); // initial guess
-        let n = 0;
 
         const tot = 1e-6;
         let deltaE;
