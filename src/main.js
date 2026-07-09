@@ -27,17 +27,6 @@ camera.position.set(0, 10, 30);
 // Renderer
 const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
 
-// Mouse pos to pos on screen
-const mouse = new THREE.Vector2(999,999);
-function onMouseMove(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-};
-window.addEventListener('mousemove', onMouseMove, false);
-
-// Raycaster
-const raycaster = new THREE.Raycaster();
-
 // Light
 {
     const color = 0xffffff;
@@ -46,6 +35,21 @@ const raycaster = new THREE.Raycaster();
     light.position.set(-1, 2, 4);
     scene.add(light);
 }
+
+// Mouse pos to pos on screen
+const mouse = new THREE.Vector2(999,999);
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+};
+window.addEventListener('mousemove', onMouseMove, false);
+
+// Date
+const dateContainer = document.getElementById('date-container');
+const dateSlider = document.getElementById('slider-container');
+
+// Raycaster
+const raycaster = new THREE.Raycaster();
 
 // Bodies
 const textureLoader = new THREE.TextureLoader();
@@ -159,14 +163,17 @@ function render() {
     });
 
     // Camera follows earth
-    // const earthWorldPos = new THREE.Vector3();
-    // earth.mesh.getWorldPosition(earthWorldPos);
-    // controls.target.lerp(earthWorldPos, 0.1);
-    // controls.update();
+    const earthWorldPos = new THREE.Vector3();
+    earth.mesh.getWorldPosition(earthWorldPos);
+    controls.target.lerp(earthWorldPos, 0.1);
+    controls.update();
 
     // Raycast to get object being hovered on
     let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
     displayBodyInfo(objectHoveredOn);
+
+    // Set displayed date to current date
+    dateContainer.innerText = new Date().toUTCString();
 
     renderer.render(scene, camera);
 }
