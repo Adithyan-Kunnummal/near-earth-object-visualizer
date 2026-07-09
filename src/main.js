@@ -6,7 +6,7 @@ import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
 import Stars from './js/stars.js';
 import Body from './js/body.js'
 import Asteroid from './js/asteroid.js'
-import getNEOData from './js/neo-data-parser.js';
+import {getNEOList, getNEOData} from './js/neo-data-parser.js';
 import raycast from './js/raycast.js'
 import bodiesInfo from './js/bodyInfo.js'
 import KER from './js/keplerian-elements-and-rates.js'
@@ -18,7 +18,7 @@ const scene = new THREE.Scene();
 const fov = 75;
 const aspect = window.innerWidth / window.innerHeight;
 const near = 0.1;
-const far = 2500
+const far = 2800
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 const controls = new OrbitControls(camera, canvas);
 controls.maxDistance = 1200;
@@ -50,15 +50,15 @@ const raycaster = new THREE.Raycaster();
 // Bodies
 const textureLoader = new THREE.TextureLoader();
 
-const sun = new Body(scene, textureLoader, '/images/sun.jpg', 0 , 1.988e30, 0, {}, 4);
-const mercury = new Body(scene, textureLoader, '/images/mercury.jpg', 5.79e10, 3.301e23,  47.9 * 1000, KER["mercury"], 1);
-const venus = new Body(scene, textureLoader, '/images/venus.jpg', 1.082e11, 4.867e24, 35 * 1000, KER["venus"], 2);
-const earth = new Body(scene, textureLoader, '/images/earth_daymap.jpg', 1.496e11, 5.972e24, 29.78 * 1000, KER["earth"], 2);
-const mars = new Body(scene, textureLoader, '/images/mars.jpg', 2.279e11, 6.417e23, 24.1 * 1000, KER["mars"], 1.5);
-const jupiter = new Body(scene, textureLoader, '/images/jupiter.jpg', 7.786e11, 1.898e27, 13.1 * 1000, KER["jupiter"], 8);
-const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', 1.433e12, 5.683e26, 9.7 * 1000, KER["saturn"], 7);
-const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', 2.872e12, 8.681e25, 6.8 * 1000, KER["uranus"], 5);
-const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', 4.495e12, 1.024e26,  5.4 * 1000, KER["neptune"], 5);
+const sun = new Body(scene, textureLoader, '/images/sun.jpg', {}, 4);
+const mercury = new Body(scene, textureLoader, '/images/mercury.jpg', KER["mercury"], 1);
+const venus = new Body(scene, textureLoader, '/images/venus.jpg', KER["venus"], 2);
+const earth = new Body(scene, textureLoader, '/images/earth_daymap.jpg', KER["earth"], 2);
+const mars = new Body(scene, textureLoader, '/images/mars.jpg', KER["mars"], 1.5);
+const jupiter = new Body(scene, textureLoader, '/images/jupiter.jpg', KER["jupiter"], 8);
+const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', KER["saturn"], 7);
+const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', KER["uranus"], 5);
+const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', KER["neptune"], 5);
 
 sun.mesh.userData.id = 'sun';
 mercury.mesh.userData.id = 'mercury';
@@ -70,6 +70,7 @@ saturn.mesh.userData.id = 'saturn';
 uranus.mesh.userData.id = 'uranus';
 neptune.mesh.userData.id = 'neptune';
 
+// Add bodies to scene
 const bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 bodies.forEach((body) => {
     scene.add(body.mesh);
@@ -94,9 +95,9 @@ const stars = new Stars(scene);
 
 // Today's NEOs
 const date = new Date().toISOString().split('T')[0];
-const NEOData = await getNEOData(date, date);
+const NEOList = await getNEOList(date, date);
 const NEOs = [];
-NEOData[date].map((NEO) => {
+NEOList[date].map((NEO) => {
     NEOs.push(new Asteroid(
         scene,
         textureLoader,
@@ -106,10 +107,7 @@ NEOData[date].map((NEO) => {
     ))
 });
 
-// Adding asteroids to earths mesh so they have similar movement
-NEOs.forEach((NEO) => {
-    earth.mesh.add(NEO.mesh);
-})
+await getNEOData(3388486).then((data) => console.log(data["orbital_data"]));
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -123,7 +121,7 @@ function resizeRendererToDisplaySize(renderer) {
 
 // Time
 const timer = new THREE.Timer();
-const simulationSpeed = 365.25 * 24 * 60 * 60/ 120; // 1 yr in 30 sec
+const simulationSpeed = 365.25 * 24 * 60 * 60/ 120; // 1 yr in 120 sec
 timer.connect(document);
 
 // Game loop

@@ -8,6 +8,7 @@ export default class Asteroid {
         this.estimated_average_radius = (this.estimated_radius_min + this.estimated_radius_max) / 2;
         this.relative_velocity = data["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"];
         this.missDistance = data["close_approach_data"][0]["miss_distance"]["astronomical"];
+        this.data = data;
 
         // Render NEO
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);

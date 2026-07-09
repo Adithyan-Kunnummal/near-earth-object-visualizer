@@ -10,8 +10,8 @@ export default class Stars {
         this.vertices = new Float32Array(this.numStars * 3); 
 
         this.vertices.forEach((_, i) => {
-            // Random position between -500, 500
-            this.vertices[i] = (Math.random() - 0.5) * 2000; 
+            // Random position between -1500, 1500
+            this.vertices[i] = (Math.random() - 0.5) * 3000; 
         })
 
         this.starsGeometry.setAttribute(

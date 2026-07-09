@@ -6,22 +6,13 @@ const AU = 1.496e11;
 const SCALE = 50;
 
 export default class Body {
-    constructor(scene, textureLoader, texturePath, distance,  mass, velocity, KER, radius = 1, widthSegments = 32, heightSegments = 16) {
+    constructor(scene, textureLoader, texturePath, KER, radius = 1, widthSegments = 32, heightSegments = 16) {
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const texture = textureLoader.load(texturePath);
         texture.colorSpace = THREE.SRGBColorSpace;
         const material = new THREE.MeshBasicMaterial({map: texture});
 
         this.mesh = new THREE.Mesh(geometry, material);
-        this.x = distance;
-        this.z = 0
-
-        this.mass = mass;
-
-        this.vx = 0;
-        this.vz = velocity;
-
-        this.prevPositions = [];
 
         // Keplerian Elements and Rates
         this.KER = KER;
@@ -127,6 +118,7 @@ export default class Body {
 }
 
 function getJulianDate(date = new Date()) {
+    // Get universal time and date
     const hours = date.getUTCHours();
     const minutes = date.getUTCMinutes();
     const seconds = date.getUTCSeconds();
