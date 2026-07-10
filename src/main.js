@@ -186,17 +186,14 @@ function render() {
     });
 
     // Camera follows earth
-    // const earthWorldPos = new THREE.Vector3();
-    // earth.mesh.getWorldPosition(earthWorldPos);
-    // controls.target.lerp(earthWorldPos, 0.1);
-    // controls.update();
+    const earthWorldPos = new THREE.Vector3();
+    earth.mesh.getWorldPosition(earthWorldPos);
+    controls.target.lerp(earthWorldPos, 0.1);
+    controls.update();
 
     // Raycast to get object being hovered on
     let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
     displayBodyInfo(objectHoveredOn);
-
-    // Set displayed date to current date
-    dateText.innerText = solarSystemDate.toUTCString();
 
     // Update body and NEO positions based on chosen date
     bodies.forEach((body) => {
@@ -211,6 +208,9 @@ function render() {
         NEO.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
 
     });
+
+    // Set displayed date to current date
+    dateText.innerText = solarSystemDate.toUTCString();
 
     renderer.render(scene, camera);
 }

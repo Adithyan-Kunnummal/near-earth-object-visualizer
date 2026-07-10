@@ -45,13 +45,34 @@ export default class NEO{
 
         // Attaching NEO name div to the mesh
         this.boxPosition = new THREE.Vector3();
-        this.infoDiv = document.createElement("div");
-        this.infoDiv.textContent = data.name;
+        this.nameDiv = document.createElement("div");
+        this.nameDiv.textContent = data.name;
 
-        this.infoDiv.style.position = "absolute";
-        this.infoDiv.style.color = "white";
-        this.infoDiv.style.zIndex = "1000";
-        document.body.appendChild(this.infoDiv);
+        this.nameDiv.style.position = "absolute";
+        this.nameDiv.style.color = "white";
+        this.nameDiv.style.zIndex = "99";
+        document.body.appendChild(this.nameDiv);
+
+        // Add NEO to list of NEOs displayed on page
+        this.neoCardDiv = document.createElement("div");
+        this.neoCardName = document.createElement("div");
+        this.neoCardInfo = document.createElement("div");
+
+        this.neoCardDiv.classList.add("neo-card");
+        this.neoCardName.classList.add("neo-name");
+        this.neoCardInfo.classList.add("neo-info");
+
+        this.neoCardDiv.appendChild(this.neoCardName); 
+        this.neoCardDiv.appendChild(this.neoCardInfo); 
+        document.getElementById("neo-card-container").appendChild(this.neoCardDiv);
+
+        this.neoCardName.innerText = data.name
+        this.neoCardInfo.innerText = 
+            `ID: ${data.id}
+            Close approach date: ${data.close_approach_data[0].close_approach_date_full}
+            Miss distance: ${data.close_approach_data[0].miss_distance.astronomical} au
+            `
+        console.log(data)
     }
 
     drawOrbit(scene) {
@@ -134,17 +155,17 @@ export default class NEO{
         this.boxPosition.x = (this.boxPosition.x * widthHalf) + widthHalf;
         this.boxPosition.y = -(this.boxPosition.y * heightHalf)+ heightHalf;
 
-        this.infoDiv.style.top = `${this.boxPosition.y}px`;
-        this.infoDiv.style.left = `${this.boxPosition.x}px`;
+        this.nameDiv.style.top = `${this.boxPosition.y}px`;
+        this.nameDiv.style.left = `${this.boxPosition.x}px`;
 
         if(this.boxPosition.x < 0 ||
             this.boxPosition.y < 0 ||
             this.boxPosition.x > canvas.clientWidth ||
             this.boxPosition.y > canvas.clientHeight
         ) {
-            this.infoDiv.style.display = 'none';
+            this.nameDiv.style.display = 'none';
         } else {
-            this.infoDiv.style.display = 'block';
+            this.nameDiv.style.display = 'block';
         }
     }
 }

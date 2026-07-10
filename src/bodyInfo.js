@@ -42,7 +42,7 @@ export default {
     mars: {
         name: 'Mars',
         info: 
-        `Mars is also known as the "Red Planet",[22] for its orange-red appearance.
+        `Mars is also known as the "Red Planet" for its orange-red appearance.
         Mars is a desert-like rocky planet with a tenuous atmosphere that is primarily carbon dioxide.
         At the average surface level the atmospheric pressure is a few thousandths of Earth's
         `

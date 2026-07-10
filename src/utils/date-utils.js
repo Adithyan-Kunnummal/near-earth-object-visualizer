@@ -1,5 +1,7 @@
 export default function getJulianDate(date = new Date()) {
     // Get universal time and date
+    date.setUTCHours(0,0,0,0);
+    
     const hours = date.getUTCHours();
     const minutes = date.getUTCMinutes();
     const seconds = date.getUTCSeconds();

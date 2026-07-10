@@ -67,10 +67,10 @@
       border: none;
       height: 45px;
       width: 200px;
-      background: rgb(35, 35, 35, 0.5);
+      background: rgba(15, 15, 15, 0.6);
     }
     .reset-date-button:hover {
-      background: rgb(41, 41, 41)
+      background: rgba(15, 15, 15, 1);
     }
     .heavenly-body-info-container {
       display: flex;
@@ -98,6 +98,56 @@
       color: white;
       font-size: 1.2rem;
     }
+    .neo-card-container {
+      display: flex;
+      flex-direction: column;
+      background-color: rgba(15, 15, 15, 0.7);
+      position: absolute;
+      color:white;
+      padding: 1.5dvh 1.5dvh 5dvh 1.5dvh;
+      left:0;
+      width: 40vh;
+      height:75%;
+      margin: 1.5dvh;
+      margin-top: 2dvh;
+      border-radius: 10px;
+      overflow: auto;
+      z-index: 100;
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        black 0%,
+        black 80%,
+        transparent 100%
+      );
+
+      mask-image: linear-gradient(
+          to bottom,
+          black 0%,
+          black 80%,
+          transparent 100%
+      );
+    }
+    .neo-card {
+      margin: 10px 0 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(15, 15, 15, 1);
+    }
+    .neo-name {
+      font-size: 1.5rem;
+      margin: 0 0 8px 0;
+    }
+    .neo-card-container-heading {
+      font-size: 1.5rem;
+    }
+.neo-card-container {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+}
+.neo-card-container::-webkit-scrollbar { 
+    display: none;  /* Older Safari and Chromium */
+}
+
     </style>
   </head>
   <body>
@@ -109,6 +159,9 @@
     <div id = 'heavenly-body-info-container' class = 'heavenly-body-info-container'>
       <div id = 'heavenly-body-name' class = 'heavenly-body-name'></div>
       <div id = 'heavenly-body-info' class='heavenly-body-info'></div>
+    </div>
+    <div id="neo-card-container" class="neo-card-container">
+      <span class = "neo-card-container-heading">Todays NEOs</span>
     </div>
     <canvas id="c"></canvas>
     <script type="module" src="/src/main.js"></script>
