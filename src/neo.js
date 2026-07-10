@@ -89,8 +89,8 @@ export default class NEO{
         scene.add(orbit);
     }
 
-    computePosition() {
-        let M = this.M0 + this.n * DEG2RAD * (getJulianDate() - this.tEpoch);
+    computePosition(date = getJulianDate()) {
+        let M = this.M0 + this.n * DEG2RAD * (date - this.tEpoch);
 
         // M between 0 to 2pi rad
         M %= 2 * Math.PI;

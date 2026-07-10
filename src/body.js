@@ -61,11 +61,11 @@ export default class Body {
         scene.add(orbit);
     }
 
-    computePosition() {
+    computePosition(date = getJulianDate()) {
         if(this.mesh.userData.id == "sun") return
 
         // Compute the value of each of that planet's six elements
-        const Teph = getJulianDate();
+        const Teph = date;
         const T = (Teph - 2451545.0)/ 36525;
 
         this.a = this.KER.a0 + this.KER.aRate * T;

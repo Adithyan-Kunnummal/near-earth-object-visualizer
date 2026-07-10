@@ -9,7 +9,10 @@ import NEO from './neo.js'
 import raycast from './raycast'
 import bodiesInfo from './bodyInfo'
 import KER from './keplerian-elements-and-rates'
+import getJulianDate from './utils/date-utils'
 import {getNEOList, getNEOData} from './neo-data-parser';
+
+const SCALE = 50;
 
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
@@ -45,8 +48,28 @@ function onMouseMove(event) {
 window.addEventListener('mousemove', onMouseMove, false);
 
 // Date
-const dateContainer = document.getElementById('date-container');
-const dateSlider = document.getElementById('slider-container');
+const dateText = document.getElementById('date-text');
+const dateSlider = document.getElementById('date-slider');
+const resetDateButton = document.getElementById('reset-date-button');
+let solarSystemDate = new Date();
+
+function handler() {
+    const date = new Date();
+    date.setDate(date.getDate() + Number(dateSlider.value));
+
+    solarSystemDate = date;
+}
+
+dateSlider.addEventListener('mousedown', () => {
+    dateSlider.addEventListener('mousemove', handler);
+});
+dateSlider.removeEventListener('mouseup', () => {
+    dateSlider.addEventListener('mousemove', handler);
+});
+resetDateButton.addEventListener('click', () => {
+    solarSystemDate = new Date();
+    dateSlider.value = 0;
+})
 
 // Raycaster
 const raycaster = new THREE.Raycaster();
@@ -163,17 +186,31 @@ function render() {
     });
 
     // Camera follows earth
-    const earthWorldPos = new THREE.Vector3();
-    earth.mesh.getWorldPosition(earthWorldPos);
-    controls.target.lerp(earthWorldPos, 0.1);
-    controls.update();
+    // const earthWorldPos = new THREE.Vector3();
+    // earth.mesh.getWorldPosition(earthWorldPos);
+    // controls.target.lerp(earthWorldPos, 0.1);
+    // controls.update();
 
     // Raycast to get object being hovered on
     let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
     displayBodyInfo(objectHoveredOn);
 
     // Set displayed date to current date
-    dateContainer.innerText = new Date().toUTCString();
+    dateText.innerText = solarSystemDate.toUTCString();
+
+    // Update body and NEO positions based on chosen date
+    bodies.forEach((body) => {
+        if(body.mesh.userData.id == 'sun') return
+        const [x, y, z] = body.computePosition(getJulianDate(solarSystemDate));
+        body.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
+
+    });
+
+    NEOs.forEach((NEO) => {
+        const [x, y, z] = NEO.computePosition(getJulianDate(solarSystemDate));
+        NEO.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
+
+    });
 
     renderer.render(scene, camera);
 }

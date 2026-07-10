@@ -15,13 +15,62 @@
       display: block; /* Since default inline element can add whitespace */
     }
     .date-container {
+      display: flex;
+      align-items: center;
+      flex-direction:column;
       position: absolute;
       color: white;
-      top: 90%;
+      top: 88%;
       left: 50%;
+      width: 80%;
       transform: translateX(-50%);
       font-size: 1.2rem;
       z-index: 100;
+    }
+    .date-text {
+      position: relative;
+      margin: 0 0 8px 0;
+      text-align: center;
+    }
+    .date-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      position: relative;
+      height: 10px;
+      width: 100%;
+      top: 0;
+      opacity: 0.7;
+      background: linear-gradient(
+      to left,
+      rgba(255, 255, 255, 0) 0%,
+      rgb(142, 142, 142) 10%,
+      rgba(142, 142, 142, 1) 90%,
+      rgba(255, 255, 255, 0) 100%);
+    }
+    .date-slider:hover {
+      opacity: 1;
+    }
+    .date-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50px;
+      background: #c6c6c6;
+      cursor: pointer;
+    }
+    .reset-date-button {
+      font-size:1.1rem;
+      color: white;
+      border-radius: 15px;
+      margin: 10px 0 0 0;
+      border: none;
+      height: 45px;
+      width: 200px;
+      background: rgb(35, 35, 35, 0.5);
+    }
+    .reset-date-button:hover {
+      background: rgb(41, 41, 41)
     }
     .heavenly-body-info-container {
       display: flex;
@@ -49,50 +98,17 @@
       color: white;
       font-size: 1.2rem;
     }
-    .slider-container{
-      top: 93%;
-      left: 20%;
-      width: 100%;
-      position: absolute;
-      z-index: 100;
-    }
-    .slider {
-      -webkit-appearance: none;
-      appearance: none;
-      position: relative;
-      width: 60%;
-      height: 10px;
-      opacity: 0.7;
-      background: linear-gradient(
-      to left,
-      rgba(255, 255, 255, 0) 0%,
-      rgb(142, 142, 142) 10%,
-      rgba(142, 142, 142, 1) 90%,
-      rgba(255, 255, 255, 0) 100%);
-    }
-    .slider:hover {
-      opacity: 1;
-    }
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 25px;
-      height: 25px;
-      border-radius: 50px;
-      background: #ff9100;
-      cursor: pointer;
-    }
-    
     </style>
   </head>
   <body>
-    <div id = 'date-container' class = 'date-container'></div>
+    <div id = 'date-container' class = 'date-container'>
+      <p id = 'date-text' class = 'date-text'></p>
+      <input id = 'date-slider' class = "date-slider" type = "range"  min="-365" max="365" value="0">
+      <button id = 'reset-date-button' class = 'reset-date-button'>Back to Today</button>
+    </div>
     <div id = 'heavenly-body-info-container' class = 'heavenly-body-info-container'>
       <div id = 'heavenly-body-name' class = 'heavenly-body-name'></div>
       <div id = 'heavenly-body-info' class='heavenly-body-info'></div>
-    </div>
-    <div id = 'slider-container' class = 'slider-container'>
-      <input class = "slider" type = "range"  min="1" max="100" value="50">
     </div>
     <canvas id="c"></canvas>
     <script type="module" src="/src/main.js"></script>
