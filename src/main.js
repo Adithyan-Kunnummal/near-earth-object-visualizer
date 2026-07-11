@@ -9,10 +9,9 @@ import NEO from './neo.js'
 import raycast from './raycast'
 import bodiesInfo from './bodyInfo'
 import KER from './keplerian-elements-and-rates'
+import { SCALE } from './utils/constants'
 import getJulianDate from './utils/date-utils'
-import {getNEOList, getNEOData} from './neo-data-parser';
-
-const SCALE = 50;
+import { getNEOList, getNEOData } from './neo-data-parser';
 
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
@@ -50,26 +49,44 @@ window.addEventListener('mousemove', onMouseMove, false);
 // Date
 const dateText = document.getElementById('date-text');
 const dateSlider = document.getElementById('date-slider');
+const dateSelector = document.getElementById('neo-date-selector');
 const resetDateButton = document.getElementById('reset-date-button');
-let solarSystemDate = new Date();
 
-function handler() {
+//Currently displayed state of solar system
+let solarSystemDate = new Date();
+solarSystemDate.setUTCHours(0,0,0,0);
+// NEOs with close approach on this day are displayed
+let NEODate = new Date();
+let lastNEODate = new Date(NEODate);
+
+dateSelector.value = NEODate.toISOString().split('T')[0];
+
+// Calculate new solar system state based on slider date input
+function dateChangeHandler() {
     const date = new Date();
     date.setDate(date.getDate() + Number(dateSlider.value));
 
     solarSystemDate = date;
+    updateMeshPositions(bodies, NEOs, solarSystemDate);
 }
 
-dateSlider.addEventListener('mousedown', () => {
-    dateSlider.addEventListener('mousemove', handler);
-});
-dateSlider.removeEventListener('mouseup', () => {
-    dateSlider.addEventListener('mousemove', handler);
-});
+dateSlider.addEventListener('input', dateChangeHandler);
+
+// Reset date to today; Slider to middle
 resetDateButton.addEventListener('click', () => {
     solarSystemDate = new Date();
     dateSlider.value = 0;
-})
+    updateMeshPositions(bodies, NEOs, solarSystemDate);
+});
+
+// When new date is selected, remove old NEOs and fetch new NEOs
+dateSelector.addEventListener('change', async (e) => {
+    NEOs.forEach((NEO) => {
+        NEO.destroy(scene);
+    });
+    NEODate = new Date(e.target.value);
+    NEOs = await displayNEOs(NEODate);
+});
 
 // Raycaster
 const raycaster = new THREE.Raycaster();
@@ -121,41 +138,8 @@ const bodyInfoDiv = document.getElementById('heavenly-body-info');
 // Stars
 const stars = new Stars(scene);
 
-// Today's NEOs
-const date = new Date().toISOString().split('T')[0];
-const NEOList = await getNEOList(date, date);
-const NEOs = [];
-
-// Create and render todays NEO objects
-NEOList[date].forEach(async (NEOData) => {
-    const data = await getNEOData(NEOData.id);
-    const orbitalData = data.orbital_data;
-
-    const NEOKER = {
-        a: orbitalData.semi_major_axis,
-        e: orbitalData.eccentricity,
-        I: orbitalData.inclination,
-        n: orbitalData.mean_motion,
-        omega: orbitalData.perihelion_argument,
-        Omega: orbitalData.ascending_node_longitude,
-        M0: orbitalData.mean_anomaly,
-        tEpoch: orbitalData.epoch_osculation,
-    };
-
-    const NEOBody = new NEO(
-        scene,
-        textureLoader,
-        "/images/asteroid.jpg",
-        NEOData,
-        earth,
-        NEOKER
-    );
-
-    // Draw NEO's orbit
-    NEOBody.drawOrbit(scene);
-
-    NEOs.push(NEOBody);
-});
+// NEOs
+let NEOs = await displayNEOs(NEODate);
 
 /* Resize renderer if renderer's canvas
    size is not the same as the display size. */
@@ -195,20 +179,6 @@ function render() {
     let objectHoveredOn = raycast(raycaster, mouse, camera, scene);
     displayBodyInfo(objectHoveredOn);
 
-    // Update body and NEO positions based on chosen date
-    bodies.forEach((body) => {
-        if(body.mesh.userData.id == 'sun') return
-        const [x, y, z] = body.computePosition(getJulianDate(solarSystemDate));
-        body.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
-
-    });
-
-    NEOs.forEach((NEO) => {
-        const [x, y, z] = NEO.computePosition(getJulianDate(solarSystemDate));
-        NEO.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
-
-    });
-
     // Set displayed date to current date
     dateText.innerText = solarSystemDate.toUTCString();
 
@@ -233,4 +203,56 @@ function displayBodyInfo(objectHoveredOn) {
     bodyInfoContainer.style.display = 'block';
     bodyNameDiv.innerText = info.name;
     bodyInfoDiv.innerText = info.info;
+}
+
+// Display NEOs on a given date
+async function displayNEOs(NEODate) {
+    const date = NEODate.toISOString().split('T')[0];
+    const NEOList = await getNEOList(date, date);
+
+    // Create and render NEO objects
+    const NEOs = await Promise.all(
+        NEOList[date].map(async (NEOData) => {
+            const data = await getNEOData(NEOData.id);
+            const orbitalData = data.orbital_data;
+
+            const NEOKER = {
+                a: orbitalData.semi_major_axis,
+                e: orbitalData.eccentricity,
+                I: orbitalData.inclination,
+                n: orbitalData.mean_motion,
+                omega: orbitalData.perihelion_argument,
+                Omega: orbitalData.ascending_node_longitude,
+                M0: orbitalData.mean_anomaly,
+                tEpoch: orbitalData.epoch_osculation,
+            };
+
+            return new NEO(
+                scene,
+                textureLoader,
+                "/images/asteroid.jpg",
+                NEOData,
+                earth,
+                NEOKER
+            );
+        })
+    );
+
+    return NEOs
+}
+
+// Compute positions of bodies and NEOs on given date
+function updateMeshPositions(bodies, NEOs, solarSystemDate) {
+    bodies.forEach((body) => {
+        if(body.mesh.userData.id == 'sun') return
+        const [x, y, z] = body.computePosition(getJulianDate(solarSystemDate));
+        body.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
+
+    });
+
+    NEOs.forEach((NEO) => {
+        const [x, y, z] = NEO.computePosition(getJulianDate(solarSystemDate));
+        NEO.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
+
+    });
 }

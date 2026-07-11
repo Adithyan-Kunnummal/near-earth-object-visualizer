@@ -1,11 +1,7 @@
 import * as THREE from 'three'
 import Body from './body';
 import getJulianDate from './utils/date-utils'
-
-const SCALE = 50;
-const G = 6.674e-11;
-const M = 5.972e24;
-const DEG2RAD = Math.PI / 180;
+import { SCALE, G, M, DEG2RAD } from './utils/constants'
 
 
 export default class NEO{
@@ -43,6 +39,10 @@ export default class NEO{
         this.mesh.position.set(-x * SCALE, z * SCALE, y * SCALE);
         scene.add(this.mesh);
 
+        // Draw NEO orbit
+        this.orbit;
+        this.drawOrbit(scene)
+
         // Attaching NEO name div to the mesh
         this.boxPosition = new THREE.Vector3();
         this.nameDiv = document.createElement("div");
@@ -72,7 +72,6 @@ export default class NEO{
             Close approach date: ${data.close_approach_data[0].close_approach_date_full}
             Miss distance: ${data.close_approach_data[0].miss_distance.astronomical} au
             `
-        console.log(data)
     }
 
     drawOrbit(scene) {
@@ -103,11 +102,11 @@ export default class NEO{
                 dashSize: 2,
                 gapSize: 1,
             } );
-        const orbit = new THREE.LineLoop(geometry, material);
-        orbit.computeLineDistances();
+        this.orbit = new THREE.LineLoop(geometry, material);
+        this.orbit.computeLineDistances();
 
 
-        scene.add(orbit);
+        scene.add(this.orbit);
     }
 
     computePosition(date = getJulianDate()) {
@@ -167,5 +166,16 @@ export default class NEO{
         } else {
             this.nameDiv.style.display = 'block';
         }
+    }
+
+    destroy(scene) {
+        scene.remove(this.mesh);
+        scene.remove(this.orbit);
+
+        this.neoCardDiv.remove();
+        this.nameDiv.remove();
+
+        this.mesh.geometry.dispose();
+        this.mesh.material.dispose();
     }
 }

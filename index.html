@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"
+    >
     <title>Solar System</title>
     <style>
     html, body {
@@ -106,8 +110,8 @@
       color:white;
       padding: 1.5dvh 1.5dvh 5dvh 1.5dvh;
       left:0;
-      width: 40vh;
-      height:75%;
+      width: 43dvh;
+      max-height:75%;
       margin: 1.5dvh;
       margin-top: 2dvh;
       border-radius: 10px;
@@ -139,15 +143,30 @@
     }
     .neo-card-container-heading {
       font-size: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-.neo-card-container {
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
-}
-.neo-card-container::-webkit-scrollbar { 
-    display: none;  /* Older Safari and Chromium */
-}
-
+    .neo-card-container {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .neo-card-container::-webkit-scrollbar { 
+        display: none;
+    }
+    .neo-card-container-heading p {
+      margin: 0;
+    }
+    .neo-date-selector {
+      all: unset;
+      color-scheme: dark;
+      font-size: 1.2rem;
+      padding: 1dvh;
+      height: 30px;
+      color:white;
+      background: rgba(15, 15, 15, 1);
+      border-radius: 10px;
+    }
     </style>
   </head>
   <body>
@@ -161,7 +180,10 @@
       <div id = 'heavenly-body-info' class='heavenly-body-info'></div>
     </div>
     <div id="neo-card-container" class="neo-card-container">
-      <span class = "neo-card-container-heading">Todays NEOs</span>
+      <div id = "neo-card-container-heading" class = "neo-card-container-heading">
+        <p>NEOs approaching on </p>
+        <input id = 'neo-date-selector' class = 'neo-date-selector' type = 'date'>
+      </div>
     </div>
     <canvas id="c"></canvas>
     <script type="module" src="/src/main.js"></script>
