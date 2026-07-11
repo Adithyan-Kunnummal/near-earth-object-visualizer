@@ -2,6 +2,8 @@
 
 A 3D visualization of the Solar System that displays the positions of planets and Near Earth Objects (NEOs) using real orbital data from NASA.
 
+![demo of neo visualizer](demo1.png)
+
 ## Technologies Used
 
 HTML, CSS, JavaScript
