@@ -2,7 +2,7 @@
 
 A 3D visualization of the Solar System that displays the positions of planets and Near Earth Objects (NEOs) using real orbital data from NASA.
 
-![demo of neo visualizer](docs/images/demo1.png)
+![demo of neo visualizer](docs/images/demo.png)
 
 ## Technologies Used
 
@@ -19,6 +19,7 @@ NASA Near Earth Object Web Services (NeoWs)
 Planetary positions were computed using the article published by the NASA JPL on approximating positions of the planets.
 
 https://ssd.jpl.nasa.gov/planets/approx_pos.html
+
 
 Asteroid/ NEO information is retreived from NASA's Near Earth Object Web Services (NeoWs)
 
