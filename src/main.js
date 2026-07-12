@@ -94,15 +94,15 @@ const raycaster = new THREE.Raycaster();
 // Bodies
 const textureLoader = new THREE.TextureLoader();
 
-const sun = new Body(scene, textureLoader, '/images/sun.jpg', {}, 4);
-const mercury = new Body(scene, textureLoader, '/images/mercury.jpg', KER["mercury"], 1);
-const venus = new Body(scene, textureLoader, '/images/venus.jpg', KER["venus"], 2);
-const earth = new Body(scene, textureLoader, '/images/earth_daymap.jpg', KER["earth"], 2);
-const mars = new Body(scene, textureLoader, '/images/mars.jpg', KER["mars"], 1.5);
-const jupiter = new Body(scene, textureLoader, '/images/jupiter.jpg', KER["jupiter"], 8);
-const saturn = new Body(scene, textureLoader, '/images/saturn.jpg', KER["saturn"], 7);
-const uranus = new Body(scene, textureLoader, '/images/uranus.jpg', KER["uranus"], 5);
-const neptune = new Body(scene, textureLoader, '/images/neptune.jpg', KER["neptune"], 5);
+const sun = new Body(scene, textureLoader, './images/sun.jpg', {}, 4);
+const mercury = new Body(scene, textureLoader, './images/mercury.jpg', KER["mercury"], 1);
+const venus = new Body(scene, textureLoader, './images/venus.jpg', KER["venus"], 2);
+const earth = new Body(scene, textureLoader, './images/earth_daymap.jpg', KER["earth"], 2);
+const mars = new Body(scene, textureLoader, './images/mars.jpg', KER["mars"], 1.5);
+const jupiter = new Body(scene, textureLoader, './images/jupiter.jpg', KER["jupiter"], 8);
+const saturn = new Body(scene, textureLoader, './images/saturn.jpg', KER["saturn"], 7);
+const uranus = new Body(scene, textureLoader, './images/uranus.jpg', KER["uranus"], 5);
+const neptune = new Body(scene, textureLoader, './images/neptune.jpg', KER["neptune"], 5);
 
 // Naming bodies to identify the body being pointed at with mouse
 sun.mesh.userData.id = 'sun';
@@ -230,7 +230,7 @@ async function displayNEOs(NEODate) {
             return new NEO(
                 scene,
                 textureLoader,
-                "/images/asteroid.jpg",
+                "./images/asteroid.jpg",
                 NEOData,
                 earth,
                 NEOKER
