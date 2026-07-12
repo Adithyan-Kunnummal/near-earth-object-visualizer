@@ -55,7 +55,7 @@ export default class Body {
         }
 
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({color: 0x808080});
+        const material = new THREE.LineBasicMaterial({color: 0x707070});
         const orbit = new THREE.LineLoop(geometry, material);
 
         scene.add(orbit);

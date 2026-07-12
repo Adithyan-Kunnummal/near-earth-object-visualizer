@@ -20,7 +20,7 @@ export default class Stars {
         );
 
         this.startsMaterial = new THREE.PointsMaterial({
-            color: 0xffffff,
+            color: 0xababab,
             size: 0.2
         });
         this.stars = new THREE.Points( this.starsGeometry, this.startsMaterial );

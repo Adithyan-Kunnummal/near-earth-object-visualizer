@@ -97,7 +97,7 @@ export default class NEO{
 
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         const material = new THREE.LineDashedMaterial( {
-                color: 0x505050,
+                color: 0x404040,
                 scale: 1,
                 dashSize: 2,
                 gapSize: 1,
@@ -145,28 +145,26 @@ export default class NEO{
     }
 
     updateInfoDiv(canvas, camera) {
-        this.boxPosition.setFromMatrixPosition(this.mesh.matrixWorld);
-        this.boxPosition.project(camera);
+    this.boxPosition.setFromMatrixPosition(this.mesh.matrixWorld);
+    this.boxPosition.project(camera);
 
-        const widthHalf = canvas.width/2;
-        const heightHalf = canvas.height/2;
+    const x = (this.boxPosition.x * 0.5 + 0.5) * canvas.clientWidth;
+    const y = (-this.boxPosition.y * 0.5 + 0.5) * canvas.clientHeight;
 
-        this.boxPosition.x = (this.boxPosition.x * widthHalf) + widthHalf;
-        this.boxPosition.y = -(this.boxPosition.y * heightHalf)+ heightHalf;
+    this.nameDiv.style.left = `${x}px`;
+    this.nameDiv.style.top = `${y}px`;
 
-        this.nameDiv.style.top = `${this.boxPosition.y}px`;
-        this.nameDiv.style.left = `${this.boxPosition.x}px`;
-
-        if(this.boxPosition.x < 0 ||
-            this.boxPosition.y < 0 ||
-            this.boxPosition.x > canvas.clientWidth ||
-            this.boxPosition.y > canvas.clientHeight
-        ) {
-            this.nameDiv.style.display = 'none';
-        } else {
-            this.nameDiv.style.display = 'block';
-        }
+    if (
+        x < 0 ||
+        y < 0 ||
+        x > canvas.clientWidth ||
+        y > canvas.clientHeight
+    ) {
+        this.nameDiv.style.display = "none";
+    } else {
+        this.nameDiv.style.display = "block";
     }
+}
 
     destroy(scene) {
         scene.remove(this.mesh);
