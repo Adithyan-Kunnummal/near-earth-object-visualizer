@@ -28,7 +28,7 @@ camera.position.set(0, 10, 30);
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // Light
 {
@@ -150,7 +150,6 @@ function resizeRendererToDisplaySize(renderer) {
     const needResize = canvas.width !== width || canvas.height !== height;
     if (needResize) { 
         renderer.setSize(width, height, false); 
-        renderer.setPixelRatio(1.25);
     }
     return needResize;
 }
