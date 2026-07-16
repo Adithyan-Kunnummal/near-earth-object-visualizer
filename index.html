@@ -28,7 +28,7 @@
   left: 50%;
   bottom: 3vh;
   transform: translateX(-50%);
-  width: 70%;
+  width: 100%;
   color: white;
   z-index: 100;
 }
@@ -42,7 +42,7 @@
   -webkit-appearance: none;
   appearance: none;
   height: 7px;
-  width: 100%;
+  width: 80vw;
   top: 0;
   opacity: 0.7;
   background: linear-gradient(
@@ -188,7 +188,7 @@
   all: unset;
   color-scheme: dark;
   font-size: clamp(.85rem, .9vw, 1rem);
-  padding: .5rem;
+  padding: .5rem 0.8rem .5rem 0.8rem;
   height: 22px;
   color: white;
   background: rgb(40, 40, 40);
@@ -200,7 +200,7 @@
   .neo-card-container {
     flex-direction: column;
     width: calc(100vw - 1rem);
-    height: 23vh;
+    height: 25vh;
     overflow: hidden;
   }
   .neo-card-list {
@@ -230,6 +230,11 @@
     left: 0;
     width: calc(100vw - 2rem);
   }
+
+  .date-slider {
+    width: 90vw;
+  }
+
 }
     </style>
   </head>
