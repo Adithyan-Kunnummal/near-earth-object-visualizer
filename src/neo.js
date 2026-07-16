@@ -64,7 +64,7 @@ export default class NEO{
 
         this.neoCardDiv.appendChild(this.neoCardName); 
         this.neoCardDiv.appendChild(this.neoCardInfo); 
-        document.getElementById("neo-card-container").appendChild(this.neoCardDiv);
+        document.getElementById("neo-card-list").appendChild(this.neoCardDiv);
 
         this.neoCardName.innerText = data.name
         this.neoCardInfo.innerText = 

@@ -22,20 +22,18 @@
 
 .date-container {
   display: flex;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
   position: absolute;
-  color: white;
-  top: 88%;
   left: 50%;
-  width: 70%;
+  bottom: 3vh;
   transform: translateX(-50%);
-  font-size: 0.9rem;
+  width: 70%;
+  color: white;
   z-index: 100;
 }
 
 .date-text {
-  position: relative;
   margin: 0 0 5px 0;
   text-align: center;
 }
@@ -43,7 +41,6 @@
 .date-slider {
   -webkit-appearance: none;
   appearance: none;
-  position: relative;
   height: 7px;
   width: 100%;
   top: 0;
@@ -72,12 +69,12 @@
 }
 
 .reset-date-button {
-  font-size: 0.9rem;
+  font-size: clamp(.85rem, .9vw, 1rem);
   color: white;
   border-radius: 10px;
-  margin: 7px 0 0 0;
+  margin: 15px 0 0 0;
   border: none;
-  height: 32px;
+  height: 40px;
   width: 140px;
   background: rgba(15,15,15,0.6);
 }
@@ -87,13 +84,13 @@
 }
 
 .heavenly-body-info-container {
-  display: flex;
+  display: none;
   flex-direction: column;
   background-color: rgb(15,15,15);
   position: absolute;
   padding: 1vh;
   right: 0;
-  width: 48vh;
+  width: min(360px, 40vw);
   margin: 1vh;
   margin-top: 1.5vh;
   border-radius: 8px;
@@ -106,13 +103,13 @@
   font-weight: bold;
   color: white;
   padding-bottom: 0.7vh;
-  font-size: 1.4rem;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
 }
 
 .heavenly-body-info {
   position: relative;
   color: white;
-  font-size: 1rem;
+  font-size: clamp(.9rem, 1vw, 1rem);
 }
 
 .neo-card-container {
@@ -121,14 +118,14 @@
   background-color: rgba(15,15,15,0.7);
   position: absolute;
   color: white;
-  padding: 1vh 1vh 3vh 1vh;
   left: 0;
-  width: 44vh;
-  max-height: 70%;
+  width: 330px;
+  max-height: 70vh;
   margin: 1vh;
   margin-top: 1.5vh;
   border-radius: 8px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   z-index: 100;
 
   -webkit-mask-image: linear-gradient(
@@ -154,22 +151,33 @@
 }
 
 .neo-card {
-  margin: 7px 0;
-  padding: 7px;
+  margin: 8px 0;
+  padding: 10px;
   border-radius: 8px;
-  background: rgba(15,15,15,1);
+  background-color: rgba(15,15,15,0.7);
 }
 
 .neo-name {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
   margin: 0 0 5px 0;
 }
 
+.neo-card-list {
+  margin: 10px;
+  gap: 10px;
+}
+
 .neo-card-container-heading {
-  font-size: 1.2rem;
+  position:sticky;
+  top: 0;
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content:center;
+  gap: 1rem;
+  padding: 1vh 1vh 1vh 1vh;
+  background-color: rgba(15,15,15,1);
+  box-shadow: 0 8px 12px -6px rgba(0, 0, 0, 0.7);
 }
 
 .neo-card-container-heading p {
@@ -179,12 +187,49 @@
 .neo-date-selector {
   all: unset;
   color-scheme: dark;
-  font-size: 1rem;
-  padding: 0.7vh;
+  font-size: clamp(.85rem, .9vw, 1rem);
+  padding: .5rem;
   height: 22px;
   color: white;
   background: rgb(40, 40, 40);
   border-radius: 8px;
+}
+
+@media (max-width: 1024px) {
+
+  .neo-card-container {
+    flex-direction: column;
+    width: calc(100vw - 1rem);
+    height: 23vh;
+    overflow: hidden;
+  }
+  .neo-card-list {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .neo-card-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .neo-card {
+    flex: 0 0 260px;
+    margin: 0;
+  }
+
+  .date-container {
+    width: 80vw;
+  }
+
+  .heavenly-body-info-container {
+    bottom: 14vh;
+    left: 0;
+    width: calc(100vw - 2rem);
+  }
 }
     </style>
   </head>
@@ -203,6 +248,7 @@
         <p>NEOs approaching on </p>
         <input id = 'neo-date-selector' class = 'neo-date-selector' type = 'date'>
       </div>
+      <div id="neo-card-list" class="neo-card-list"></div>
     </div>
     <canvas id="c"></canvas>
     <script type="module" src="/src/main.js"></script>
